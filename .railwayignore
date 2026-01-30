@@ -1,0 +1,11 @@
+node_modules/
+.git/
+.DS_Store
+*.log
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+vendor/
+.env.example
+tests/

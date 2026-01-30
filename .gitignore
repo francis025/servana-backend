@@ -1,0 +1,43 @@
+# CodeIgniter 4
+/vendor/
+/writable/cache/*
+/writable/logs/*
+/writable/session/*
+!/writable/cache/index.html
+!/writable/logs/index.html
+!/writable/session/index.html
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Composer
+composer.phar
+
+# Testing
+phpunit.xml
+.phpunit.result.cache
+
+# Build files
+builds
+
+# Uploads (don't commit user uploads)
+/public/uploads/*
+!/public/uploads/.gitkeep
