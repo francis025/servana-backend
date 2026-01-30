@@ -68,12 +68,23 @@ $content = preg_replace(
 
 // Write the modified content
 if (file_put_contents($configFile, $content)) {
-    echo "✓ Set DB_HOST to: $dbHost\n";
-    echo "✓ Set DB_USER to: $dbUser\n";
-    echo "✓ Set DB_PASSWORD (hidden)\n";
-    echo "✓ Set DB_NAME to: $dbName\n";
-    echo "✓ Set DB_PORT to: $dbPort\n";
-    echo "=== Database Configuration Complete ===\n";
+    // Clear file stat cache to ensure changes are visible
+    clearstatcache(true, $configFile);
+    
+    // Verify the write
+    $verify = file_get_contents($configFile);
+    if (strpos($verify, $dbHost) !== false) {
+        echo "✓ Set DB_HOST to: $dbHost\n";
+        echo "✓ Set DB_USER to: $dbUser\n";
+        echo "✓ Set DB_PASSWORD (hidden)\n";
+        echo "✓ Set DB_NAME to: $dbName\n";
+        echo "✓ Set DB_PORT to: $dbPort\n";
+        echo "✓ Verified changes are written\n";
+        echo "=== Database Configuration Complete ===\n";
+    } else {
+        echo "⚠️  File written but verification failed!\n";
+        echo "This might be a caching issue.\n";
+    }
 } else {
     echo "❌ ERROR: Failed to write to Database.php\n";
     exit(1);

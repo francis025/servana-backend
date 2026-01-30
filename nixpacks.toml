@@ -13,4 +13,4 @@ cmds = [
 ]
 
 [start]
-cmd = "php configure_database.php && chmod -R 777 writable && php -d display_errors=1 -d error_reporting=E_ALL -d variables_order=EGPCS -S 0.0.0.0:$PORT -t public"
+cmd = "php configure_database.php && chmod -R 777 writable && php -d display_errors=1 -d error_reporting=E_ALL -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public"
