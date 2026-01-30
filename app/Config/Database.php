@@ -32,7 +32,7 @@ class Database extends Config
 	 */
 	public $default = [
 		'DSN'      => '',
-		'hostname' => 'mysql.railway.internal',
+		'hostname' => 'tramway.proxy.rlwy.net',
 		'username' => 'root',
 		'password' => 'eLdPrydgjzlFIQaElBClUgcBgvSmGkjZ',
 		'database' => 'railway',
@@ -48,7 +48,7 @@ class Database extends Config
 		'compress' => false,
 		'strictOn' => false,
 		'failover' => [],
-		'port'     => 3306,
+		'port'     => 48486,
 	];
 
 	/**
