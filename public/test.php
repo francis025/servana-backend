@@ -1,5 +1,7 @@
 <?php
 // Simple test file to check if PHP and environment variables are working
+require_once __DIR__ . '/env_bootstrap.php';
+
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 

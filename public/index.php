@@ -2,6 +2,14 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+/*
+ *---------------------------------------------------------------
+ * LOAD ENVIRONMENT VARIABLES (Railway Support)
+ *---------------------------------------------------------------
+ */
+require_once __DIR__ . '/env_bootstrap.php';
+
 /*
  *---------------------------------------------------------------
  * CHECK PHP VERSION
