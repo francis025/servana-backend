@@ -4,6 +4,14 @@
 
 CONFIG_FILE="app/Config/Database.php"
 
+# Railway provides MySQL credentials with MYSQL_ prefix
+# Use those if DB_ variables aren't set
+DB_HOST="${DB_HOST:-${MYSQLHOST}}"
+DB_USER="${DB_USER:-${MYSQLUSER}}"
+DB_PASSWORD="${DB_PASSWORD:-${MYSQLPASSWORD}}"
+DB_NAME="${DB_NAME:-${MYSQLDATABASE}}"
+DB_PORT="${DB_PORT:-${MYSQLPORT}}"
+
 echo "=== Configuring Database Credentials ==="
 echo "DB_HOST: ${DB_HOST:-NOT SET}"
 echo "DB_USER: ${DB_USER:-NOT SET}"
