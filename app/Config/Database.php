@@ -32,10 +32,10 @@ class Database extends Config
 	 */
 	public $default = [
 		'DSN'      => '',
-		'hostname' => 'localhost',
+		'hostname' => 'mysql.railway.internal',
 		'username' => 'root',
-		'password' => '',
-		'database' => 'servana',
+		'password' => 'eLdPrydgjzlFIQaElBClUgcBgvSmGkjZ',
+		'database' => 'railway',
 		
 		'DBDriver' => 'MySQLi',
 		'DBPrefix' => '',
