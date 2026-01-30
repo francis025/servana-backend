@@ -12,4 +12,4 @@ cmds = [
 ]
 
 [start]
-cmd = "chmod -R 777 writable && php -S 0.0.0.0:$PORT -t public"
+cmd = "chmod -R 777 writable && php -d display_errors=1 -d error_reporting=E_ALL -S 0.0.0.0:$PORT -t public"
