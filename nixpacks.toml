@@ -13,4 +13,4 @@ cmds = [
 ]
 
 [start]
-cmd = "chmod -R 777 writable && php -d display_errors=1 -d error_reporting=E_ALL -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public"
+cmd = "chmod -R 777 writable && php -d display_errors=1 -d error_reporting=E_ALL~E_DEPRECATED -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public"
