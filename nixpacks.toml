@@ -6,7 +6,10 @@ nixPkgs = ["php83", "php83Packages.composer", "php83Extensions.mysqli", "php83Ex
 cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [phases.build]
-cmds = ["php spark cache:clear"]
+cmds = [
+    "chmod -R 777 writable",
+    "php spark cache:clear || true"
+]
 
 [start]
-cmd = "php -S 0.0.0.0:$PORT -t public"
+cmd = "chmod -R 777 writable && php -S 0.0.0.0:$PORT -t public"
