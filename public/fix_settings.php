@@ -22,25 +22,24 @@ try {
     
     // Insert minimal required settings
     $settings = [
-        ['variable', 'app_name', 'Servana'],
-        ['variable', 'support_email', 'support@servana.com'],
-        ['variable', 'support_number', '+1234567890'],
-        ['variable', 'currency', 'USD'],
-        ['variable', 'currency_code', '$'],
-        ['variable', 'time_zone', 'Asia/Kolkata'],
-        ['variable', 'max_serviceable_distance', '50'],
-        ['variable', 'country_code', '+1'],
-        ['variable', 'range_units', 'kilometers'],
+        ['app_name', 'Servana'],
+        ['support_email', 'support@servana.com'],
+        ['support_number', '+1234567890'],
+        ['currency', 'USD'],
+        ['currency_code', '$'],
+        ['time_zone', 'Asia/Kolkata'],
+        ['max_serviceable_distance', '50'],
+        ['country_code', '+1'],
+        ['range_units', 'kilometers'],
     ];
     
     $inserted = 0;
     foreach ($settings as $setting) {
-        $type = $mysqli->real_escape_string($setting[0]);
-        $variable = $mysqli->real_escape_string($setting[1]);
-        $value = $mysqli->real_escape_string($setting[2]);
+        $variable = $mysqli->real_escape_string($setting[0]);
+        $value = $mysqli->real_escape_string($setting[1]);
         
-        $sql = "INSERT INTO settings (type, variable, value, created_at) 
-                VALUES ('$type', '$variable', '$value', NOW())
+        $sql = "INSERT INTO settings (variable, value, created_at) 
+                VALUES ('$variable', '$value', NOW())
                 ON DUPLICATE KEY UPDATE value = '$value'";
         
         if ($mysqli->query($sql)) {
