@@ -83,14 +83,6 @@ class Database extends Config
 	{
 		parent::__construct();
 
-		// Load database credentials from environment variables for Railway
-		// Try $_ENV first (Railway), then getenv() as fallback
-		$this->default['hostname'] = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: $this->default['hostname'];
-		$this->default['username'] = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: $this->default['username'];
-		$this->default['password'] = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: $this->default['password'];
-		$this->default['database'] = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: $this->default['database'];
-		$this->default['port'] = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: $this->default['port'];
-
 		// Ensure that we always set the database group to 'tests' if
 		// we are currently running an automated test suite, so that
 		// we don't overwrite live data on accident.
