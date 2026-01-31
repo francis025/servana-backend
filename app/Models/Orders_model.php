@@ -521,7 +521,7 @@ class Orders_model extends Model
             $builder->where('o.status', $_POST['status']);
         }
         $builder->where('o.parent_id', null);
-        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
+        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status, pd.advance_booking_days, u.id, u.username, u.image, u.phone, u.latitude, u.longitude, partner_subscriptions.name, partner_subscriptions.id, partner_subscriptions.status, up.image, u.email, up.username, pd.chat, pd.pre_chat, up.phone, u.balance, up.latitude, up.longitude, pd.company_name, o.visiting_charges, pd.address, u.payable_commision')->get()->getResultArray();
         $bulkData = array();
         $bulkData['total'] = $total;
         $rows = array();
@@ -1242,7 +1242,7 @@ class Orders_model extends Model
             $builder->where('o.status', $_POST['status']);
         }
         $builder->where('o.parent_id', null);
-        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
+        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status, pd.advance_booking_days, u.id, u.username, u.image, u.phone, u.latitude, u.longitude, partner_subscriptions.name, partner_subscriptions.id, partner_subscriptions.status, up.image, u.email, up.username, pd.chat, pd.pre_chat, up.phone, u.balance, up.latitude, up.longitude, pd.company_name, o.visiting_charges, pd.address, u.payable_commision')->get()->getResultArray();
         $bulkData = array();
         $bulkData['total'] = $total;
         $rows = array();
