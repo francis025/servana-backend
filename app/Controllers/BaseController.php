@@ -118,7 +118,7 @@ class BaseController extends Controller
             $user = $this->ionAuth->user()->row();
             $this->user = $user->first_name;
             $this->userIsAdmin = $this->ionAuth->isAdmin();
-            $this->userIsPartner = $this->ionAuth->isPartner();
+            $this->userIsPartner = $this->ionAuth->inGroup('partners');
             $this->userId = $user->id;
             $this->userIdentity = $user->email;
         } else {
