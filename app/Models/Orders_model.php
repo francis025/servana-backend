@@ -140,7 +140,7 @@ class Orders_model extends Model
             if (isset($_POST['status']) && $_POST['status'] != '') {
                 $builder->where('o.status', $_POST['status']);
             }
-            $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id')->get()->getResultArray();
+            $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
 
             $bulkData = array();
             $bulkData['total'] = $total;
@@ -521,7 +521,7 @@ class Orders_model extends Model
             $builder->where('o.status', $_POST['status']);
         }
         $builder->where('o.parent_id', null);
-        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id')->get()->getResultArray();
+        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
         $bulkData = array();
         $bulkData['total'] = $total;
         $rows = array();
@@ -1075,7 +1075,7 @@ class Orders_model extends Model
                 $temprow_for_suborder = [];
                 $builder_sub_order = $db->table('orders o');
                 $builder_sub_order->where('o.parent_id', $row['id']);
-                $sub_order_record = $builder_sub_order->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id')->get()->getResultArray();
+                $sub_order_record = $builder_sub_order->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
                 $tempRow['new_end_time_with_date'] =  format_date($row['date_of_service'], 'd-m-Y') . ' ' . format_date(($row['ending_time']), 'h:i A');
                 if (empty($sub_order_record)) {
                     $tempRow['multiple_days_booking'] = [];
@@ -1242,7 +1242,7 @@ class Orders_model extends Model
             $builder->where('o.status', $_POST['status']);
         }
         $builder->where('o.parent_id', null);
-        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id')->get()->getResultArray();
+        $order_record = $builder->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
         $bulkData = array();
         $bulkData['total'] = $total;
         $rows = array();
@@ -1610,7 +1610,7 @@ class Orders_model extends Model
                 $temprow_for_suborder = [];
                 $builder_sub_order = $db->table('orders o');
                 $builder_sub_order->where('o.parent_id', $row['id']);
-                $sub_order_record = $builder_sub_order->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id')->get()->getResultArray();
+                $sub_order_record = $builder_sub_order->orderBy($sort, $order)->limit($limit, $offset)->groupBy('o.id, t.status')->get()->getResultArray();
                 $tempRow['new_end_time_with_date'] =  format_date($row['date_of_service'], 'd-m-Y') . ' ' . format_date(($row['ending_time']), 'h:i A');
                 if (empty($sub_order_record)) {
                     $tempRow['multiple_days_booking'] = [];
