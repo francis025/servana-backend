@@ -9,7 +9,8 @@ cmds = ["composer install --no-dev --optimize-autoloader"]
 cmds = [
     "chmod +x configure_database.sh",
     "chmod -R 777 writable",
-    "php spark cache:clear || true"
+    "php spark cache:clear || true",
+    "rm -rf writable/cache/* || true"
 ]
 
 [start]
