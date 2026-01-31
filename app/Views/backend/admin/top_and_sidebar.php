@@ -134,21 +134,24 @@ $version = $db->table('updates')->select('*')->orderBy('id', 'DESC')->get(1)->ge
                 <?php
                 $disk = fetch_current_file_manager();
 
+                $logoValue = isset($data['logo']) ? $data['logo'] : '';
+                $halfLogoValue = isset($data['half_logo']) ? $data['half_logo'] : '';
+                
                 if (isset($disk) && $disk == "local_server") {
-                    $logo = $data['logo'] != "" ? base_url("public/uploads/site/" . $data['logo']) : base_url('public/backend/assets/img/news/img01.jpg');
+                    $logo = $logoValue != "" ? base_url("public/uploads/site/" . $logoValue) : base_url('public/backend/assets/img/news/img01.jpg');
                 } elseif (isset($disk) && $disk == "aws_s3") {
-                    $logo = fetch_cloud_front_url('site', $data['logo']);
+                    $logo = fetch_cloud_front_url('site', $logoValue);
                 } else {
-                    $logo = $data['logo'] != "" ? base_url("public/uploads/site/" . $data['logo']) : base_url('public/backend/assets/img/news/img01.jpg');
+                    $logo = $logoValue != "" ? base_url("public/uploads/site/" . $logoValue) : base_url('public/backend/assets/img/news/img01.jpg');
                 }
 
 
                 if (isset($disk) && $disk == "local_server") {
-                    $half_logo = $data['half_logo'] != "" ? base_url("public/uploads/site/" . $data['half_logo']) : base_url('public/backend/assets/img/news/img01.jpg');
+                    $half_logo = $halfLogoValue != "" ? base_url("public/uploads/site/" . $halfLogoValue) : base_url('public/backend/assets/img/news/img01.jpg');
                 } elseif (isset($disk) && $disk == "aws_s3") {
-                    $half_logo = fetch_cloud_front_url('site', $data['logo']);
+                    $half_logo = fetch_cloud_front_url('site', $halfLogoValue);
                 } else {
-                    $half_logo = $data['half_logo'] != "" ? base_url("public/uploads/site/" . $data['half_logo']) : base_url('public/backend/assets/img/news/img01.jpg');
+                    $half_logo = $halfLogoValue != "" ? base_url("public/uploads/site/" . $halfLogoValue) : base_url('public/backend/assets/img/news/img01.jpg');
                 }
                 ?>
                 <img src=" <?= $logo; ?>" class="sidebar_logo h-max-60px" alt="">
