@@ -30,11 +30,11 @@ $company_title = get_company_title_with_fallback($data);
         $is_rtl = fetch_details('languages', ['is_default' => 1], ['is_rtl'])[0]['is_rtl'];
     }
     if ($is_rtl == 1) { ?>
-        <link rel="stylesheet" href="<?= base_url('public/backend/assets/css/rtl_css/rtl_custom.css') ?>" />
-        <link rel="stylesheet" href="<?= base_url('public/backend/assets/css/vendor/cropper.css') ?>" />
+        <link rel="stylesheet" href="<?= base_url('backend/assets/css/rtl_css/rtl_custom.css') ?>" />
+        <link rel="stylesheet" href="<?= base_url('backend/assets/css/vendor/cropper.css') ?>" />
     <?php } else {  ?>
-        <link rel="stylesheet" href="<?= base_url('public/backend/assets/css/custom.css') ?>" />
-        <link rel="stylesheet" href="<?= base_url('public/backend/assets/css/vendor/cropper.css') ?>" />
+        <link rel="stylesheet" href="<?= base_url('backend/assets/css/custom.css') ?>" />
+        <link rel="stylesheet" href="<?= base_url('backend/assets/css/vendor/cropper.css') ?>" />
     <?php } ?>
 </head>
 <div id="loading">

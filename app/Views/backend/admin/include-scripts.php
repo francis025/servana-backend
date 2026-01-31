@@ -1,33 +1,33 @@
-<script src="<?= base_url('public/backend/assets/js/vendor/bootstrap-table.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/popper.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/summernote.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/bootstrap.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/jquery.nicescroll.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/moment.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/stisla.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/iziToast.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/select2.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/cropper.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/bootstrap-colorpicker.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/daterangepicker.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/dropzone.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/sweetalert.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/vendor/lottie.js') ?>"></script>
-<script type="text/javascript" src="<?= base_url('public/backend/assets/js/vendor/tinymce/tinymce.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/bootstrap-table.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/popper.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/summernote.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/bootstrap.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/jquery.nicescroll.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/moment.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/stisla.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/iziToast.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/select2.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/cropper.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/bootstrap-colorpicker.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/daterangepicker.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/dropzone.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/sweetalert.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/vendor/lottie.js') ?>"></script>
+<script type="text/javascript" src="<?= base_url('backend/assets/js/vendor/tinymce/tinymce.min.js') ?>"></script>
 
 <?php
 switch ($main_page) {
     case "dashboard":
-        echo '<script  src="' . base_url('public/backend/assets/js/vendor/chart.min.js') . '"></script>';
-        echo '<script  src="' . base_url('public/backend/assets/js/vendor/iconify.min.js') . '"></script>';
+        echo '<script  src="' . base_url('backend/assets/js/vendor/chart.min.js') . '"></script>';
+        echo '<script  src="' . base_url('backend/assets/js/vendor/iconify.min.js') . '"></script>';
         break;
     case "subscription":
-        echo '<script src="' . base_url('public/backend/assets/js/page/subscription.js') . '"></script>';
+        echo '<script src="' . base_url('backend/assets/js/page/subscription.js') . '"></script>';
         break;
     case "plans":
         break;
     case "../../text_to_speech":
-        echo '<script src="' . base_url('public/backend/assets/js/page/tts.js') . '"></script>';
+        echo '<script src="' . base_url('backend/assets/js/page/tts.js') . '"></script>';
         break;
 }
 $api_key = get_settings('api_key_settings', true);
@@ -187,25 +187,25 @@ $places_api_key = isset($api_key['google_places_api']) && !empty($api_key['googl
 
 <!-- start :: include FilePond library -->
 <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-image-preview.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-pdf-preview.min.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-file-validate-size.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-file-validate-type.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-image-validate-size.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond.jquery.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-image-preview.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-pdf-preview.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-file-validate-size.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-file-validate-type.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-image-validate-size.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/filepond/dist/filepond.jquery.js') ?>"></script>
 <!-- for media preview -->
-<!-- <script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-media-preview.esm.js') ?>"></script> -->
-<!-- <script src="<?= base_url('public/backend/assets/js/filepond/dist/filepond-plugin-media-preview.esm.min.js') ?>"></script> -->
+<!-- <script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-media-preview.esm.js') ?>"></script> -->
+<!-- <script src="<?= base_url('backend/assets/js/filepond/dist/filepond-plugin-media-preview.esm.min.js') ?>"></script> -->
 <!-- for end  media preview -->
 <!-- end :: include FilePond library -->
-<script src="<?= base_url('public/backend/assets/js/scripts.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/bootstrap-translations.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/switch-translations.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/select2_register.js') ?>"></script>
-<script src="<?= base_url('public/backend/assets/js/switch_component.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/scripts.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/bootstrap-translations.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/switch-translations.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/select2_register.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/switch_component.js') ?>"></script>
 <!-- for swithchery js start -->
-<script src="<?= base_url('public/backend/assets/js/switchery.min.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/switchery.min.js') ?>"></script>
 <!-- table reorder rows start -->
 <script src="https://unpkg.com/bootstrap-table@1.21.4/dist/extensions/reorder-rows/bootstrap-table-reorder-rows.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tablednd@1.0.5/dist/jquery.tablednd.min.js"></script>
@@ -214,19 +214,19 @@ $places_api_key = isset($api_key['google_places_api']) && !empty($api_key['googl
 <!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
 <?php
-echo '<script src="' . base_url('public/backend/assets/js/vendor/chart.min.js') . '"></script>';
+echo '<script src="' . base_url('backend/assets/js/vendor/chart.min.js') . '"></script>';
 ?>
 </head>
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"></script>
-<script src="<?= base_url('public/backend/assets/js/window_event.js') ?>"></script>
+<script src="<?= base_url('backend/assets/js/window_event.js') ?>"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-<script type="text/javascript" src="<?= base_url('public/backend/assets/js/custom.js') ?>?v=<?= time() ?>"></script>
-<?= '<script src="' . base_url('public/backend/assets/js/page/admin.js') . '"></script>' ?>
-<script type="text/javascript" src="<?= base_url('public/backend/assets/js/AllQueryParams.js') ?>"></script>
+<script type="text/javascript" src="<?= base_url('backend/assets/js/custom.js') ?>?v=<?= time() ?>"></script>
+<?= '<script src="' . base_url('backend/assets/js/page/admin.js') . '"></script>' ?>
+<script type="text/javascript" src="<?= base_url('backend/assets/js/AllQueryParams.js') ?>"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script type="text/javascript" src="<?= base_url('public/backend/assets/js/tableExport.min.js') ?>"></script>
+<script type="text/javascript" src="<?= base_url('backend/assets/js/tableExport.min.js') ?>"></script>
 
 <script
     src="https://maps.googleapis.com/maps/api/js?key=<?= $map_api_key ?>&libraries=places&callback=initAll&loading=async"
