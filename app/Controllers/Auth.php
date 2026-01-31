@@ -97,6 +97,66 @@ class Auth extends BaseController
             }
         }
     }
+
+    /**
+     * Admin Login page - uses backend admin view
+     *
+     * @return string|\CodeIgniter\HTTP\RedirectResponse
+     */
+    public function admin_login()
+    {
+        $settings = get_settings('general_settings', true);
+        $this->data['data'] = $settings;
+        $app_name = get_company_title_with_fallback($settings);
+        $this->data['admin'] = ($this->isLoggedIn && $this->userIsAdmin) ? true : false;
+
+        if ($this->ionAuth->loggedIn()) {
+            if ($this->ionAuth->isAdmin()) {
+                return redirect()->to('/admin/dashboard')->withCookies();
+            } else {
+                return redirect()->to('/partner/dashboard')->withCookies();
+            }
+        } else {
+            $this->data['title'] = lang('Auth.login_heading');
+            $this->validation->setRule('password', str_replace(':', '', lang('Auth.login_password_label')), 'required');
+            
+            if ($this->request->getPost() && $this->validation->withRequest($this->request)->run()) {
+                $remember = (bool)$this->request->getVar('remember');
+                $data = $this->ionAuth->login($this->request->getVar('identity'), $this->request->getVar('password'), $remember, $this->request->getVar('country_code'));
+
+                if (!empty($data)) {
+                    $this->is_loggedin = true;
+                    $this->session->setFlashdata('message', $this->ionAuth->messages());
+                    
+                    if ($data->group_id == 1) {
+                        return redirect()->to('/admin/dashboard')->withCookies();
+                    } else if ($data->group_id == 3) {
+                        return redirect()->to('/partner/dashboard')->withCookies();
+                    }
+                } else {
+                    $this->session->setFlashdata('message', $this->ionAuth->errors($this->validationListTemplate));
+                    return redirect()->back()->withInput();
+                }
+            } else {
+                $this->data['message'] = $this->validation->getErrors() ? $this->validation->listErrors($this->validationListTemplate) : $this->session->getFlashdata('message');
+                $this->data['identity'] = [
+                    'name'  => 'identity',
+                    'id'    => 'identity',
+                    'type'  => 'email',
+                    'value' => set_value('identity'),
+                ];
+                $this->data['password'] = [
+                    'name' => 'password',
+                    'id'   => 'password',
+                    'type' => 'password',
+                ];
+                $this->data['title'] = "Admin Login &mdash; $app_name";
+                $this->data['main_page'] = "login";
+                
+                return $this->renderPage('backend/admin/template', $this->data);
+            }
+        }
+    }
     /**
      * Log the user in
      *

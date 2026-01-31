@@ -1,7 +1,8 @@
 <?php
 
 
-$routes->get('/admin/login', 'Auth::login');
+$routes->get('/admin/login', 'Auth::admin_login');
+$routes->post('/admin/login', 'Auth::admin_login');
 $routes->get('/', 'admin\Dashboard::index');
 
 $routes->group('', ['filter' => 'protected'], function ($routes) {

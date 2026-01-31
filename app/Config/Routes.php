@@ -31,7 +31,8 @@ if (file_exists(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';
 }
 // Auth routes - these should be accessible without authentication
-$routes->get('/admin/login', 'Auth::login');
+$routes->get('/admin/login', 'Auth::admin_login');
+$routes->post('/admin/login', 'Auth::admin_login');
 $routes->get('/auth/login', 'Auth::login');
 $routes->get('/auth/logout', 'Auth::logout');
 $routes->add('unauthorised', 'Home::unauthorised');
