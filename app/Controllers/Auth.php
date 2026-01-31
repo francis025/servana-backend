@@ -153,7 +153,7 @@ class Auth extends BaseController
                 $this->data['title'] = "Admin Login &mdash; $app_name";
                 $this->data['main_page'] = "login";
                 
-                return $this->renderPage('backend/admin/template', $this->data);
+                return view('backend/admin/login_template', $this->data);
             }
         }
     }
