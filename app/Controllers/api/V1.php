@@ -11047,14 +11047,14 @@ class V1 extends BaseController
         // Only include partners with active subscriptions
         // This ensures only providers with valid subscriptions are returned
         $partners = $db->table('users p')
-            ->select("p.id, p.username, p.company, p.image, pd.banner, pd.slug, pd.company_name, pd.about, pd.long_description, pc.minimum_order_amount, pc.discount, pc.discount_type, pd.at_store, pd.at_doorstep, (SELECT COUNT(*) FROM orders o WHERE o.partner_id = p.id AND o.parent_id IS NULL AND o.status='completed' AND (o.payment_status != 2 OR o.payment_status IS NULL)) as number_of_orders, $distance_sql")
+            ->select("p.id, p.username, p.company, p.image, pd.banner, pd.slug, pd.company_name, pd.about, pd.long_description, MIN(pc.minimum_order_amount) as minimum_order_amount, MIN(pc.discount) as discount, MIN(pc.discount_type) as discount_type, pd.at_store, pd.at_doorstep, (SELECT COUNT(*) FROM orders o WHERE o.partner_id = p.id AND o.parent_id IS NULL AND o.status='completed' AND (o.payment_status != 2 OR o.payment_status IS NULL)) as number_of_orders, $distance_sql")
             ->join('partner_details pd', 'pd.partner_id = p.id', 'left')
             ->join('partner_subscriptions ps', 'ps.partner_id = p.id', 'inner')
             ->join('promo_codes pc', 'pc.partner_id = p.id', 'left')
             ->whereIn('p.id', $partners_ids)
             ->where('pd.is_approved', '1')
             ->where('ps.status', 'active')
-            ->groupBy('p.id');
+            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.slug, pd.company_name, pd.about, pd.long_description, pd.at_store, pd.at_doorstep');
 
         if ($latitude && $longitude) {
             $partners->having("distance < $max_distance")->orderBy('distance');
