@@ -10727,7 +10727,7 @@ class V1 extends BaseController
             ->join('custom_job_requests cj', 'cj.id = pb.custom_job_request_id', 'left')
             ->join('services_ratings sr2', 'sr2.custom_job_request_id = cj.id', 'left')
             ->where('ps.status', 'active')->where('pd.is_approved', '1')
-            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.company_name, pd.slug, ps.status')
+            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.company_name, pd.slug, ps.status, pd.ratings')
             ->having('distance < ' . $max_distance)
             ->orderBy('pd.ratings', 'desc')
             ->limit($limit)
@@ -10806,7 +10806,7 @@ class V1 extends BaseController
             ->join('services_ratings sr', 'sr.service_id = s.id', 'left')
 
             ->where('ps.status', 'active')->where('pd.is_approved', '1')
-            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.company_name, pd.slug, pd.about, pd.long_description, ps.status')
+            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.company_name, pd.slug, pd.about, pd.long_description, ps.status, pd.ratings')
             ->having('distance < ' . $max_distance)
             ->orderBy('pd.ratings', 'desc')
             ->limit($rated_provider_limit)->get()->getResultArray();
