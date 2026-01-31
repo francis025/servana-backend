@@ -2,7 +2,7 @@
 
 namespace App\Controllers\api;
 
-require_once  'vendor/autoload.php';
+require_once ROOTPATH . 'vendor/autoload.php';
 
 use App\Controllers\BaseController;
 use App\Libraries\Flutterwave;
