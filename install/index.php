@@ -216,6 +216,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST) {
                                                     <input name="password" type="password" id="password" class="form-control" placeholder="Your Password" />
                                                 </div>
                                             </div>
+                                            <div class="form-group row">
+                                                <div class="col-md-6">
+                                                    <label>Database Port</label>
+                                                    <input name="port" type="text" id="port" value="3306" class="form-control" placeholder="Database Port (default: 3306)" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -273,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST) {
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js" type="text/javascript"></script>
     <script src="assets/jquery.smartWizard.js"></script>
-    <script src="assets/smartWizard-validation.js"></script>
+    <script src="assets/smartWizard-validation.js?v=<?php echo time(); ?>"></script>
 
 </body>
 

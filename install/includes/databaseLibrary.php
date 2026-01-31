@@ -6,11 +6,18 @@ class Database
 {
     function create_database($data)
     {
-        $mysqli = new mysqli($data['hostname'], $data['username'], $data['password'], '');
+        $port = isset($data['port']) && !empty($data['port']) ? $data['port'] : 3306;
+        ini_set('default_socket_timeout', 120);
+        ini_set('mysql.connect_timeout', 120);
         
-        if (mysqli_connect_errno())
+        // Connect directly to the database to verify it exists
+        $mysqli = @new mysqli($data['hostname'], $data['username'], $data['password'], $data['database'], $port);
+        
+        if ($mysqli->connect_error) {
             return false;
-        $mysqli->query("CREATE DATABASE IF NOT EXISTS " . $data['database']);
+        }
+        
+        // Database exists and connection successful
         $mysqli->close();
         return true;
     }
@@ -18,7 +25,10 @@ class Database
 
     function create_tables($data)
     {
-        $link = mysqli_connect($data['hostname'], $data['username'], $data['password'], $data['database']);
+        $port = isset($data['port']) && !empty($data['port']) ? $data['port'] : 3306;
+        ini_set('default_socket_timeout', 120);
+        ini_set('mysql.connect_timeout', 120);
+        $link = @mysqli_connect($data['hostname'], $data['username'], $data['password'], $data['database'], $port);
         if (mysqli_connect_errno())
             return false;
      
@@ -52,7 +62,10 @@ class Database
         // $ionAuth->register($data['admin_email'],$data['admin_password'],$data['admin_email'],[],[1]);
 
         // return true;
-        $mysqli = new mysqli($data['hostname'], $data['username'], $data['password'], $data['database']);
+        $port = isset($data['port']) ? $data['port'] : 3306;
+        ini_set('default_socket_timeout', 60);
+        $mysqli = new mysqli($data['hostname'], $data['username'], $data['password'], $data['database'], $port);
+        $mysqli->options(MYSQLI_OPT_CONNECT_TIMEOUT, 60);
         if (mysqli_connect_errno())
             return false;
 
