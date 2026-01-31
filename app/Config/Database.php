@@ -90,6 +90,17 @@ class Database extends Config
 		{
 			$this->defaultGroup = 'tests';
 		}
+
+		// Set SQL mode to disable ONLY_FULL_GROUP_BY for Railway MySQL compatibility
+		$this->default['strictOn'] = false;
+	}
+
+	/**
+	 * Initialize database connection and set SQL mode
+	 */
+	public function initDriver(): void
+	{
+		// This will be called after connection to set SQL mode
 	}
 
 	//--------------------------------------------------------------------

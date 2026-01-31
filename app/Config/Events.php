@@ -90,6 +90,10 @@ function set_language()
 function set_system_timezone()
 {
 	$db  = \Config\Database::connect();
+	
+	// Fix MySQL ONLY_FULL_GROUP_BY issue for Railway
+	$db->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
+	
 	$settings = get_settings('general_settings', true);
 	/* Set database timezone */
 	if (!empty($settings['system_timezone_gmt'])) {
