@@ -133,16 +133,21 @@ class Auth extends BaseController
                     }
                 }
                 
-                $data = $this->ionAuth->login($identity, $this->request->getVar('password'), $remember, $this->request->getVar('country_code'));
+                $loginResult = $this->ionAuth->login($identity, $this->request->getVar('password'), $remember, $this->request->getVar('country_code'));
 
-                if (!empty($data)) {
+                if ($loginResult) {
                     $this->is_loggedin = true;
                     $this->session->setFlashdata('message', $this->ionAuth->messages());
                     
-                    if ($data->group_id == 1) {
+                    // Get the logged in user to check their group
+                    $user = $this->ionAuth->user()->row();
+                    
+                    if ($this->ionAuth->isAdmin()) {
                         return redirect()->to('/admin/dashboard')->withCookies();
-                    } else if ($data->group_id == 3) {
+                    } else if ($this->ionAuth->inGroup('partners')) {
                         return redirect()->to('/partner/dashboard')->withCookies();
+                    } else {
+                        return redirect()->to('/admin/dashboard')->withCookies();
                     }
                 } else {
                     $this->session->setFlashdata('message', $this->ionAuth->errors($this->validationListTemplate));
