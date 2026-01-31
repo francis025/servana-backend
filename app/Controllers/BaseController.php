@@ -116,11 +116,22 @@ class BaseController extends Controller
         $this->isLoggedIn = $this->ionAuth->loggedIn();
         if ($this->isLoggedIn) {
             $user = $this->ionAuth->user()->row();
-            $this->user = $user->first_name;
-            $this->userIsAdmin = $this->ionAuth->isAdmin();
-            $this->userIsPartner = $this->ionAuth->inGroup('partners');
-            $this->userId = $user->id;
-            $this->userIdentity = $user->email;
+            if ($user) {
+                $this->user = $user->first_name;
+                $this->userIsAdmin = $this->ionAuth->isAdmin();
+                $this->userIsPartner = $this->ionAuth->inGroup('partners');
+                $this->userId = $user->id;
+                $this->userIdentity = $user->email;
+            } else {
+                // User session exists but user data not found - clear session
+                $this->ionAuth->logout();
+                $this->user = NULL;
+                $this->userIsAdmin = NULL;
+                $this->userIsPartner = NULL;
+                $this->userId = NULL;
+                $this->userIdentity = NULL;
+                $this->isLoggedIn = false;
+            }
         } else {
             $this->user = NULL;
             $this->userIsAdmin = NULL;
