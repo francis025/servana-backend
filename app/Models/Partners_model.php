@@ -437,14 +437,14 @@ class Partners_model extends Model
                 ->join('promo_codes pc', 'pc.partner_id = pd.partner_id', 'left')
                 ->where('ug.group_id', 3)
                 ->where('pd.is_approved', '1')
-                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id']);
+                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id', 'u.id', 'ug.id']);
 
             // for web :: web ma scroll ma issue ave ena mate aa karel che  jyare partner id pass thay tyare distance vadi condition n check thavi joiye
             if (!array_key_exists('pd.partner_id', $where)) {
                 $dataBuilder->having('distance < ' . $additional_data['max_serviceable_distance']);
             }
             $dataBuilder->where('ps.status', 'active')
-                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id']);
+                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id', 'u.id', 'ug.id']);
         } else if (isset($additional_data['latitude']) && !empty($additional_data['latitude'])) {
             // Note: We no longer need to join translated_partner_details here
             // because we're using a subquery in the WHERE clause to search across all languages
@@ -477,7 +477,7 @@ class Partners_model extends Model
                 ->join('promo_codes pc', 'pc.partner_id = pd.partner_id', 'left')
                 ->where('ug.group_id', 3)
                 ->where('pd.is_approved', '1')
-                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id'])
+                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id', 'u.id', 'ug.id'])
                 ->having('distance < ' . $additional_data['max_serviceable_distance']);
         } else {
             // Note: We no longer need to join translated_partner_details here
@@ -522,7 +522,7 @@ class Partners_model extends Model
                 ->join('partner_timings pt', 'pt.partner_id = pd.partner_id', 'left')
                 ->where('ug.group_id', 3)
                 ->whereNotIn('pd.is_approved', $values)
-                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id']);
+                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id', 'pt.id', 'u.id', 'ug.id']);
         }
         if (isset($_GET['partner_filter']) && $_GET['partner_filter'] != '') {
             $dataBuilder->where('pd.is_approved', $_GET['partner_filter']);
