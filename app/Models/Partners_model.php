@@ -506,8 +506,6 @@ class Partners_model extends Model
                 ps.id as partner_subscription_id, 
                 ps.status as partner_subscription_status,
 
-                pt.day, pt.opening_time, pt.closing_time, pt.is_open,
-
                 COALESCE(OrdersSummary.number_of_orders, 0) AS number_of_orders,
                 COALESCE(DiscountSummary.maximum_discount_percentage, 0) AS maximum_discount_percentage,
                 COALESCE(DiscountSummary.maximum_discount_up_to, 0) AS maximum_discount_up_to
@@ -519,10 +517,9 @@ class Partners_model extends Model
                 ->join("($subQueryOrders) AS OrdersSummary", 'OrdersSummary.partner_id = pd.partner_id', 'left')
                 ->join("($subQueryDiscounts) AS DiscountSummary", 'DiscountSummary.partner_id = pd.partner_id', 'left')
                 ->join('partner_subscriptions ps', 'ps.partner_id = pd.partner_id', 'left')
-                ->join('partner_timings pt', 'pt.partner_id = pd.partner_id', 'left')
                 ->where('ug.group_id', 3)
                 ->whereNotIn('pd.is_approved', $values)
-                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id', 'pt.id', 'u.id', 'ug.id']);
+                ->groupBy(['pd.partner_id', 'pd.id', 'ps.id', 'u.id', 'ug.id']);
         }
         if (isset($_GET['partner_filter']) && $_GET['partner_filter'] != '') {
             $dataBuilder->where('pd.is_approved', $_GET['partner_filter']);
