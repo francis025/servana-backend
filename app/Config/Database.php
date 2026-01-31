@@ -49,6 +49,10 @@ class Database extends Config
 		'strictOn' => false,
 		'failover' => [],
 		'port'     => 48486,
+		// Fix MySQL ONLY_FULL_GROUP_BY issue for Railway
+		'options'  => [
+			MYSQLI_INIT_COMMAND => "SET SESSION sql_mode='NO_ENGINE_SUBSTITUTION'",
+		],
 	];
 
 	/**
