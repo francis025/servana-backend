@@ -14,4 +14,4 @@ cmds = [
 ]
 
 [start]
-cmd = "chmod -R 777 writable && CI_ENVIRONMENT=development php -d display_errors=1 -d error_reporting=E_ALL -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public public/router.php"
+cmd = "chmod -R 777 writable && CI_ENVIRONMENT=production php -d display_errors=1 -d error_reporting=24575 -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public public/router.php"
