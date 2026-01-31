@@ -104,11 +104,17 @@ class Auth extends BaseController
      */
     public function login()
     {
-        $settings = get_settings('general_settings', true);
-        $this->data['data'] = $settings;
-        // Get company title with proper language fallback
-        $app_name = get_company_title_with_fallback($settings);
-        $this->data['admin'] = ($this->isLoggedIn && $this->userIsAdmin)  ? true : false;
+        try {
+            $settings = get_settings('general_settings', true);
+            $this->data['data'] = $settings;
+            // Get company title with proper language fallback
+            $app_name = get_company_title_with_fallback($settings);
+            $this->data['admin'] = ($this->isLoggedIn && $this->userIsAdmin)  ? true : false;
+        } catch (\Exception $e) {
+            log_message('error', 'Auth::login() error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
         if ($this->ionAuth->loggedIn()) {
             if ($this->ionAuth->isAdmin()) {
                 return redirect()->to('/admin/dashboard')->withCookies();
