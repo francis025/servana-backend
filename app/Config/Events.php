@@ -46,6 +46,14 @@ Events::on('pre_system', function () {
 		ob_start(function ($buffer) {
 			return $buffer;
 		});
+		
+		// Fix MySQL ONLY_FULL_GROUP_BY issue for Railway - must be done early
+		try {
+			$db = \Config\Database::connect();
+			$db->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
+		} catch (\Exception $e) {
+			// Ignore if database not available yet
+		}
 	}
 
 	/*
