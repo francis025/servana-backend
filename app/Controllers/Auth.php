@@ -122,7 +122,18 @@ class Auth extends BaseController
             
             if ($this->request->getPost() && $this->validation->withRequest($this->request)->run()) {
                 $remember = (bool)$this->request->getVar('remember');
-                $data = $this->ionAuth->login($this->request->getVar('identity'), $this->request->getVar('password'), $remember, $this->request->getVar('country_code'));
+                $identity = $this->request->getVar('identity');
+                
+                // If identity looks like an email, look up the user's phone number
+                // because IonAuth is configured to use phone as identity
+                if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                    $user = fetch_details('users', ['email' => $identity]);
+                    if (!empty($user)) {
+                        $identity = $user[0]['phone'];
+                    }
+                }
+                
+                $data = $this->ionAuth->login($identity, $this->request->getVar('password'), $remember, $this->request->getVar('country_code'));
 
                 if (!empty($data)) {
                     $this->is_loggedin = true;
