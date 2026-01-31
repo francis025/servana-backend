@@ -15,7 +15,7 @@ class Category_model extends Model
     public function __construct()
     {
         parent::__construct();
-        $ionAuth = new \IonAuth\Libraries\IonAuth();
+        $ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->admin_id = ($ionAuth->isAdmin()) ? $ionAuth->user()->row()->id : 0;
     }
     protected $table = 'categories';

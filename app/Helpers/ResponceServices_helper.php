@@ -132,7 +132,7 @@ function resolve_permission_user_id($userId = null)
         return $session->get('user_id');
     }
 
-    $ionAuth = new \IonAuth\Libraries\IonAuth();
+    $ionAuth = new \App\Libraries\IonAuthWrapper();
     if ($ionAuth->loggedIn()) {
         $user = $ionAuth->user()->row();
         return $user ? $user->id : null;

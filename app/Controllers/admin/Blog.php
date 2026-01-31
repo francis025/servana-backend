@@ -29,7 +29,7 @@ class Blog extends Admin
         $this->translatedBlogModel = new TranslatedBlogDetailsModel();
         $this->translatedBlogSeoModel = new TranslatedBlogSeoSettings_model();
         $this->db = \Config\Database::connect();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->creator_id = $this->userId;
         $this->superadmin = $this->session->get('email');
         $this->trans = new ApiResponseAndNotificationStrings();

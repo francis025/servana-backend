@@ -16,9 +16,9 @@ class Promo_code_model extends Model
     public function __construct()
     {
         parent::__construct();
-        $ionAuth = new \IonAuth\Libraries\IonAuth();
+        $ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->admin_id = ($ionAuth->isAdmin()) ? $ionAuth->user()->row()->id : 0;
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
     }
     public function list($from_app = false, $search = '', $limit = 10, $offset = 0, $sort = 'id', $order = 'DESC', $where = [], $language_code = null)
     {

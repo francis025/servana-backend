@@ -12,7 +12,7 @@ class Users extends Admin
     {
         parent::__construct();
         $this->user_model = new \App\Models\Users_model();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->admin_id = ($this->ionAuth->isAdmin()) ? $this->ionAuth->user()->row()->id : 0;
         $this->superadmin = $this->session->get('email');
         $this->defaultLanguage = get_default_language();

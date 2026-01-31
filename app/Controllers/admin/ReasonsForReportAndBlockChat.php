@@ -22,7 +22,7 @@ class ReasonsForReportAndBlockChat extends Admin
         $this->translatedReasonModel = new TranslatedReasonsForReportAndBlockChat_model();
         $this->creator_id = $this->userId;
         $this->db = \Config\Database::connect();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->validation = \Config\Services::validation();
         $this->creator_id = $this->userId;
         $this->superadmin = $this->session->get('email');

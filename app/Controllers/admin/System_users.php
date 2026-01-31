@@ -19,7 +19,7 @@ class system_users extends Admin
         $this->system_users = new System_user_model();
         $this->validation = \Config\Services::validation();
         $this->db      = \Config\Database::connect();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->user_permissions = new user_permissions_model();
         $this->users = new Users_model();
         $this->superadmin = $this->session->get('email');

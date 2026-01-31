@@ -63,7 +63,7 @@ class ProtectedRouteFilter implements FilterInterface
         }
 
         // First, check authentication for protected routes
-        $ionAuth = new \IonAuth\Libraries\IonAuth();
+        $ionAuth = new \App\Libraries\IonAuthWrapper();
 
         // Check if user is logged in
         if (!$ionAuth->loggedIn()) {

@@ -26,7 +26,7 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         // Initialize IonAuth for authentication check
-        $ionAuth = new \IonAuth\Libraries\IonAuth();
+        $ionAuth = new \App\Libraries\IonAuthWrapper();
 
         // Check if user is logged in
         if (!$ionAuth->loggedIn()) {

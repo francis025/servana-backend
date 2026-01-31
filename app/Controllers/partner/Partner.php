@@ -44,7 +44,7 @@ class Partner extends BaseController
         helper('function', 'form', 'url', 'filesystem', 'ResponceServices');
         helper('ResponceServices');
         $this->validation = \Config\Services::validation();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $user = $this->ionAuth->user()->row();
         $this->data['admin'] = $this->userIsAdmin;
         $this->data['partner'] = $this->userIsPartner;

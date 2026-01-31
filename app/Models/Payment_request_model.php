@@ -11,7 +11,7 @@ class Payment_request_model extends Model
     protected $allowedFields = ['user_id', 'user_type', 'payment_address', 'amount', 'remarks', 'status'];
     public function list($from_app = false, $search = '', $limit = 20, $offset = 0, $sort = 'id', $order = 'DESC', $where = [])
     {
-        $ionAuth = new \IonAuth\Libraries\IonAuth();
+        $ionAuth = new \App\Libraries\IonAuthWrapper();
         $db      = \Config\Database::connect();
         $builder = $db->table('payment_request p');
         $multipleWhere = [];

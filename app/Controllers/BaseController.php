@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use IonAuth\Libraries\IonAuth;
+use App\Libraries\IonAuthWrapper;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -108,7 +108,7 @@ class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         //--------------------------------------------------------------------
         // E.g.: $this->session = \Config\Services::session();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new IonAuthWrapper();
         $this->updateUser();
     }
     protected function updateUser()

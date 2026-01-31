@@ -10,7 +10,7 @@ class Admin extends BaseController
     public function __construct()
     {
         helper('function');
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->session = \Config\Services::session();
         $this->updateUser();
         $this->data['admin'] = $this->userIsAdmin;

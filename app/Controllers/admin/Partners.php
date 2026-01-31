@@ -40,7 +40,7 @@ class Partners extends Admin
         $this->settle_commission = new Settlement_model();
         $this->validation = \Config\Services::validation();
         $this->db = \Config\Database::connect();
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->creator_id = $this->userId;
         $this->superadmin = $this->session->get('email');
         $this->trans = new ApiResponseAndNotificationStrings();

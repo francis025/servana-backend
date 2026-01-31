@@ -116,7 +116,7 @@ class V1 extends BaseController
     public function login()
     {
         try {
-            $ionAuth = new \IonAuth\Libraries\IonAuth();
+            $ionAuth = new \App\Libraries\IonAuthWrapper();
             $config = new \Config\IonAuth();
             $validation =  \Config\Services::validation();
             $request = \Config\Services::request();
@@ -575,7 +575,7 @@ class V1 extends BaseController
                 ];
                 return $this->response->setJSON($response);
             }
-            $ionAuth    = new \IonAuth\Libraries\IonAuth();
+            $ionAuth    = new \App\Libraries\IonAuthWrapper();
             $validation =  \Config\Services::validation();
             $request = \Config\Services::request();
             $config = new \Config\IonAuth();

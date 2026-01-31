@@ -34,7 +34,7 @@ class Language extends BaseController
             // Update user's preferred language in users table if user is an admin or provider
             // This ensures the language preference persists across sessions
             try {
-                $ionAuth = new \IonAuth\Libraries\IonAuth();
+                $ionAuth = new \App\Libraries\IonAuthWrapper();
                 if ($ionAuth->loggedIn()) {
                     $user = $ionAuth->user()->row();
                     if (!empty($user)) {

@@ -16,9 +16,9 @@ class Orders_model extends Model
     protected $allowedFields = ['partner_id', 'user_id', 'city_id', 'city', 'total', 'promo_code', 'promo_discount', 'final_total', 'payment_method', 'admin_earnings', 'visiting_charges', 'partner_earnings', 'address_id', 'address', 'date_of_service', 'starting_time', 'ending_time', 'duration', 'status', 'remarks', 'payment_status', 'otp', 'isRefunded', 'payment_status_of_additional_charge', 'additional_charges', 'total_additional_charge', 'custom_job_request_id', 'payment_method_of_additional_charge'];
     public function __construct()
     {
-        $ionAuth = new \IonAuth\Libraries\IonAuth();
+        $ionAuth = new \App\Libraries\IonAuthWrapper();
         $this->admin_id = ($ionAuth->isAdmin()) ? $ionAuth->user()->row()->id : 0;
-        $this->ionAuth = new \IonAuth\Libraries\IonAuth();
+        $this->ionAuth = new \App\Libraries\IonAuthWrapper();
     }
     public function list($from_app = false, $search = '', $limit = 10, $offset = 0, $sort = 'id', $order = 'ASC', $where = [], $where_in_key = '', $where_in_value = [], $addition_data = '', $download_invoice = false, $newUI = false, $is_provider = false)
     {
