@@ -10709,8 +10709,8 @@ class V1 extends BaseController
         $limit = $row['limit'] ?: 10;
         $is_latitude_set1 = $latitude ? "st_distance_sphere(POINT($longitude, $latitude), POINT(`longitude`, `latitude` ))/1000  as distance" : "";
         $rating_data = $db->table('partner_details pd')
-            ->select('p.id, p.username, p.company, pc.minimum_order_amount, p.image,
-                    pd.banner, pc.discount, pc.discount_type, pd.company_name,pd.slug,
+            ->select('p.id, p.username, p.company, MIN(pc.minimum_order_amount) as minimum_order_amount, p.image,
+                    pd.banner, MIN(pc.discount) as discount, MIN(pc.discount_type) as discount_type, pd.company_name, pd.slug,
                     ps.status as subscription_status,' . $is_latitude_set1 . ', COUNT(sr.rating) as number_of_rating,
                     SUM(sr.rating) as total_rating,
                     (SUM(sr.rating) / COUNT(sr.rating)) as average_rating')
@@ -10727,9 +10727,9 @@ class V1 extends BaseController
             ->join('custom_job_requests cj', 'cj.id = pb.custom_job_request_id', 'left')
             ->join('services_ratings sr2', 'sr2.custom_job_request_id = cj.id', 'left')
             ->where('ps.status', 'active')->where('pd.is_approved', '1')
+            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.company_name, pd.slug, ps.status')
             ->having('distance < ' . $max_distance)
             ->orderBy('pd.ratings', 'desc')
-            ->groupBy('p.id')
             ->limit($limit)
             ->get()->getResultArray();
 
@@ -10792,7 +10792,7 @@ class V1 extends BaseController
         $limit = $row['limit'] ?: 10;
         $is_latitude_set = $latitude ? "st_distance_sphere(POINT($longitude, $latitude), POINT(`longitude`, `latitude` ))/1000  as distance" : "";
         $rated_provider_limit = !empty($row['limit']) ? $row['limit'] : 10;
-        $rating_data = $db->table('partner_details pd')->select('p.id,p.username,p.company,pc.minimum_order_amount,p.image,pd.banner,pc.discount,pc.discount_type,pd.company_name, pd.slug,pd.about,pd.long_description,
+        $rating_data = $db->table('partner_details pd')->select('p.id,p.username,p.company,MIN(pc.minimum_order_amount) as minimum_order_amount,p.image,pd.banner,MIN(pc.discount) as discount,MIN(pc.discount_type) as discount_type,pd.company_name, pd.slug,pd.about,pd.long_description,
                         ps.status as subscription_status,' . $is_latitude_set . ', COUNT(sr.rating) as number_of_rating,
                     SUM(sr.rating) as total_rating,
                     (SUM(sr.rating) / COUNT(sr.rating)) as average_rating')
@@ -10806,9 +10806,9 @@ class V1 extends BaseController
             ->join('services_ratings sr', 'sr.service_id = s.id', 'left')
 
             ->where('ps.status', 'active')->where('pd.is_approved', '1')
+            ->groupBy('p.id, p.username, p.company, p.image, pd.banner, pd.company_name, pd.slug, pd.about, pd.long_description, ps.status')
             ->having('distance < ' . $max_distance)
             ->orderBy('pd.ratings', 'desc')
-            ->groupBy('p.id')
             ->limit($rated_provider_limit)->get()->getResultArray();
 
         $rating_data = $this->filterPartnersBySubscription($rating_data, $db);
