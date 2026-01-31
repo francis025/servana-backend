@@ -1,6 +1,6 @@
 # Nixpacks configuration for Railway deployment
 [phases.setup]
-nixPkgs = ["php83", "php83Packages.composer", "php83Extensions.mysqli", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "php83Extensions.mbstring", "php83Extensions.xml", "php83Extensions.curl", "php83Extensions.zip", "php83Extensions.gd", "php83Extensions.intl", "php83Extensions.fileinfo"]
+nixPkgs = ["php81", "php81Packages.composer", "php81Extensions.mysqli", "php81Extensions.pdo", "php81Extensions.pdo_mysql", "php81Extensions.mbstring", "php81Extensions.xml", "php81Extensions.curl", "php81Extensions.zip", "php81Extensions.gd", "php81Extensions.intl", "php81Extensions.fileinfo"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader"]
@@ -14,4 +14,4 @@ cmds = [
 ]
 
 [start]
-cmd = "chmod -R 777 writable && CI_ENVIRONMENT=production php -d display_errors=0 -d error_reporting=0 -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public public/router.php"
+cmd = "chmod -R 777 writable && CI_ENVIRONMENT=production php -d display_errors=0 -d error_reporting=24575 -d variables_order=EGPCS -d opcache.enable=0 -d opcache.enable_cli=0 -S 0.0.0.0:$PORT -t public public/router.php"
