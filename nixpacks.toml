@@ -1,6 +1,6 @@
 # Nixpacks configuration for Railway deployment
 [phases.setup]
-nixPkgs = ["php81", "php81Packages.composer", "php81Extensions.mysqli", "php81Extensions.pdo", "php81Extensions.pdo_mysql", "php81Extensions.mbstring", "php81Extensions.xml", "php81Extensions.curl", "php81Extensions.zip", "php81Extensions.gd", "php81Extensions.intl", "php81Extensions.fileinfo"]
+nixPkgs = ["php82", "php82Packages.composer", "php82Extensions.mysqli", "php82Extensions.pdo", "php82Extensions.pdo_mysql", "php82Extensions.mbstring", "php82Extensions.xml", "php82Extensions.curl", "php82Extensions.zip", "php82Extensions.gd", "php82Extensions.intl", "php82Extensions.fileinfo"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader"]
