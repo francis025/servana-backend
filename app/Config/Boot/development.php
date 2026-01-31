@@ -8,7 +8,7 @@
  | make sure they don't make it to production. And save us hours of
  | painful debugging.
  */
-error_reporting(-1);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 ini_set('display_errors', '1');
 if (! defined('KINT_SKIP_HELPERS')) {
     define('KINT_SKIP_HELPERS', true);
