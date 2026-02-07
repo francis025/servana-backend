@@ -159,17 +159,7 @@ class V1 extends BaseController
                 return $this->response->setJSON($response);
             }
 
-            // For email login, we need to find the user's phone first for ionAuth
-            $loginIdentity = $identity;
-            if ($useEmailLogin) {
-                $db = \Config\Database::connect();
-                $emailLookup = $db->table('users')->select('phone')->where('email', $identity)->get()->getRowArray();
-                if (!empty($emailLookup) && !empty($emailLookup['phone'])) {
-                    $loginIdentity = $emailLookup['phone'];
-                }
-            }
-
-            $login = $ionAuth->login($loginIdentity, $password, false, $request->getPost('country_code'));
+            // Look up the user in the database (must be a partner - group_id 3)
             $db      = \Config\Database::connect();
             $builder = $db->table('users u');
             $builder->select('u.*,ug.group_id')
@@ -177,84 +167,77 @@ class V1 extends BaseController
                 ->where('ug.group_id', 3)
                 ->where([$lookupColumn => $identity]);
             $userCheck = $builder->get()->getResultArray();
+
             if (empty($userCheck)) {
                 $response = [
                     'error' => true,
-                    'message' => labels(OPS_IT_SEES_LIKE_THIS_NUMBER_ISNT_REGISTERED_PLEASE_REGISTER_TO_USE_OUR_SERVICES, 'Oops, it seems like this number isn’t registered. Please register to use our services.'),
+                    'message' => labels(OPS_IT_SEES_LIKE_THIS_NUMBER_ISNT_REGISTERED_PLEASE_REGISTER_TO_USE_OUR_SERVICES, 'Oops, it seems like this account isn\'t registered. Please register to use our services.'),
                 ];
                 return $this->response->setJSON($response);
             }
-            if (!empty($userCheck)) {
-                $identityMatch = $useEmailLogin
-                    ? ($userCheck[0]['email'] == $identity)
-                    : ($userCheck[0]['phone'] == $identity);
-                $countryCodeMatch = $useEmailLogin
-                    ? true
-                    : (($userCheck[0]['country_code'] == null) || ($userCheck[0]['country_code'] == $request->getPost('country_code')));
-                if ($countryCodeMatch && $identityMatch) {
-                    if ($login) {
-                        if (($userCheck[0]['country_code'] == null) && !$useEmailLogin) {
-                            update_details(['country_code' => $request->getPost('country_code')], ['id' => $userCheck[0]['id']], 'users');
-                        }
-                        if (($request->getPost('fcm_id')) && !empty($request->getPost('fcm_id'))) {
-                            // Get language_code from request (optional)
-                            $language_code = $request->getPost('language_code');
-                            store_users_fcm_id($userCheck[0]['id'], $request->getPost('fcm_id'), $request->getPost('platform'), null, $language_code);
 
-                            // update_details(['fcm_id' => $request->getPost('fcm_id')], ['phone' => $identity, 'id' => $userCheck[0]['id']], 'users');
-                        }
-                        if (($request->getPost('platform')) && !empty($request->getPost('platform'))) {
-                            update_details(['platform' => $request->getPost('platform')], ['id' => $userCheck[0]['id']], 'users');
-                        }
-                        $data = array();
-                        array_push($this->user_data, "api_key");
-                        $data = fetch_details('users', ['id' => $userCheck[0]['id']], ['id', 'username', 'country_code', 'phone', 'email', 'fcm_id', 'image', 'api_key'])[0];
-                        $token = generate_tokens($identity, 3);
-                        $token_data['user_id'] = $data['id'];
-                        $token_data['token'] = $token;
-                        if (isset($token_data) && !empty($token_data)) {
-                            insert_details($token_data, 'users_tokens');
-                        }
-                        $getdData = fetch_partner_formatted_data($data['id']);
-                        $response = [
-                            'error' => false,
-                            "token" => $token,
-                            'message' => labels(USER_LOGGED_SUCCESSFULLY, 'User Logged successfully'),
-                            'data' =>  $getdData
-                        ];
-                        return $this->response->setJSON($response);
-                    } else {
-                        $existsColumn = $useEmailLogin ? 'email' : $identity_column;
-                        if (!exists([$existsColumn => $identity], 'users')) {
-                            $response = [
-                                'error' => true,
-                                'message' => labels(USER_DOES_NOT_EXISTS, 'User does not exists !'),
-                            ];
-                            return $this->response->setJSON($response);
-                        } else {
-                            $response = [
-                                'error' => true,
-                                'message' => labels(INCORRECT_LOGIN_CREDENTIALS_PLEASE_CHECK_AND_TRY_AGAIN, 'Incorrect login credentials. Please check and try again.'),
-                            ];
-                            return $this->response->setJSON($response);
-                        }
-                    }
-                } else {
+            $userData = $userCheck[0];
+
+            // Verify password directly using bcrypt
+            $login = password_verify($password, $userData['password']);
+
+            if (!$login) {
+                $response = [
+                    'error' => true,
+                    'message' => labels(INCORRECT_LOGIN_CREDENTIALS_PLEASE_CHECK_AND_TRY_AGAIN, 'Incorrect login credentials. Please check and try again.'),
+                ];
+                return $this->response->setJSON($response);
+            }
+
+            // Check country code for phone-based login
+            if (!$useEmailLogin) {
+                $countryCodeMatch = ($userData['country_code'] == null) || ($userData['country_code'] == $request->getPost('country_code'));
+                if (!$countryCodeMatch) {
                     $response = [
                         'error' => true,
                         'message' => labels(USER_DOES_NOT_EXISTS, 'User does not exists !'),
                     ];
                     return $this->response->setJSON($response);
                 }
-            } else {
-                if (!exists([$identity_column => $identity], 'users')) {
-                    $response = [
-                        'error' => true,
-                        'message' => labels(USER_DOES_NOT_EXISTS, 'User does not exists !'),
-                    ];
-                    return $this->response->setJSON($response);
+                if ($userData['country_code'] == null) {
+                    update_details(['country_code' => $request->getPost('country_code')], ['id' => $userData['id']], 'users');
                 }
             }
+
+            // Clear login attempts for this user
+            $userPhone = $userData['phone'] ?? '';
+            $userEmail = $userData['email'] ?? '';
+            if (!empty($userPhone)) {
+                $db->table('login_attempts')->where('login', $userPhone)->delete();
+            }
+            if (!empty($userEmail)) {
+                $db->table('login_attempts')->where('login', $userEmail)->delete();
+            }
+
+            // Update FCM and platform
+            if (!empty($request->getPost('fcm_id'))) {
+                $language_code = $request->getPost('language_code');
+                store_users_fcm_id($userData['id'], $request->getPost('fcm_id'), $request->getPost('platform'), null, $language_code);
+            }
+            if (!empty($request->getPost('platform'))) {
+                update_details(['platform' => $request->getPost('platform')], ['id' => $userData['id']], 'users');
+            }
+
+            $data = fetch_details('users', ['id' => $userData['id']], ['id', 'username', 'country_code', 'phone', 'email', 'fcm_id', 'image', 'api_key'])[0];
+            $token = generate_tokens($identity, 3);
+            $token_data['user_id'] = $data['id'];
+            $token_data['token'] = $token;
+            if (isset($token_data) && !empty($token_data)) {
+                insert_details($token_data, 'users_tokens');
+            }
+            $getdData = fetch_partner_formatted_data($data['id']);
+            $response = [
+                'error' => false,
+                "token" => $token,
+                'message' => labels(USER_LOGGED_SUCCESSFULLY, 'User Logged successfully'),
+                'data' =>  $getdData
+            ];
+            return $this->response->setJSON($response);
         } catch (\Exception $th) {
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
@@ -5037,24 +5020,29 @@ class V1 extends BaseController
                 ]);
             }
 
-            // For email reset, use the user's phone as identity for ionAuth
-            $resetIdentity = $useEmailReset ? $user_data[0]['phone'] : $identity;
+            // Directly hash and update password using bcrypt (same as ionAuth uses)
+            $newPassword = $this->request->getPost('new_password');
+            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 10]);
 
-            $change = $this->ionAuth->resetPassword($resetIdentity, $this->request->getPost('new_password'), $user_data[0]['id']);
-            if ($change) {
-                $this->ionAuth->logout();
-                return $this->response->setJSON([
-                    'error' => false,
-                    'message' => labels(FORGOT_PASSWORD_SUCCESSFULLY, "Forgot Password successfully"),
-                    "data" => [],
-                ]);
-            } else {
-                return $this->response->setJSON([
-                    'error' => true,
-                    'message' => $this->ionAuth->errors($this->validationListTemplate),
-                    "data" => [],
-                ]);
+            $userId = $user_data[0]['id'];
+            $db->table('users')->where('id', $userId)->update(['password' => $hashedPassword]);
+
+            // Clear any login attempts for this user to prevent lockout
+            $userPhone = $user_data[0]['phone'] ?? '';
+            $userEmail = $user_data[0]['email'] ?? '';
+            if (!empty($userPhone)) {
+                $db->table('login_attempts')->where('login', $userPhone)->delete();
             }
+            if (!empty($userEmail)) {
+                $db->table('login_attempts')->where('login', $userEmail)->delete();
+            }
+
+            $this->ionAuth->logout();
+            return $this->response->setJSON([
+                'error' => false,
+                'message' => labels(FORGOT_PASSWORD_SUCCESSFULLY, "Forgot Password successfully"),
+                "data" => [],
+            ]);
         } catch (\Exception $th) {
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
