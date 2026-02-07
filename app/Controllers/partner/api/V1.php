@@ -7833,7 +7833,7 @@ class V1 extends BaseController
             );
             return $this->response->setJSON([
                 'error'   => true,
-                'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
+                'message' => 'Home error: ' . $th->getMessage() . ' at line ' . $th->getLine() . ' in ' . basename($th->getFile()),
             ]);
         }
     }
