@@ -7569,6 +7569,10 @@ class V1 extends BaseController
     public function get_home_data()
     {
         try {
+            // Disable ONLY_FULL_GROUP_BY to allow aggregate queries with non-grouped columns
+            $db = \Config\Database::connect();
+            $db->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
+
             $partner_id = $this->user_details['id'];
 
             //-------------------------------SUBSCRIPTION INFORMATION------------------------------//
@@ -7829,7 +7833,7 @@ class V1 extends BaseController
             );
             return $this->response->setJSON([
                 'error'   => true,
-                'message' => 'Home data error: ' . $th->getMessage() . ' at line ' . $th->getLine(),
+                'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
             ]);
         }
     }
