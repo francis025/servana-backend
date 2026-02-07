@@ -7835,7 +7835,7 @@ class V1 extends BaseController
             );
             return $this->response->setJSON([
                 'error'   => true,
-                'message' => 'Home error: ' . $th->getMessage() . ' at line ' . $th->getLine() . ' in ' . basename($th->getFile()),
+                'message' => 'v7-Home error: ' . $th->getMessage() . ' at line ' . $th->getLine() . ' in ' . basename($th->getFile()),
             ]);
         }
     }
