@@ -240,7 +240,7 @@ class V1 extends BaseController
             return $this->response->setJSON($response);
         } catch (\Exception $th) {
             $response['error'] = true;
-            $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
+            $response['message'] = 'Login error: ' . $th->getMessage() . ' at line ' . $th->getLine() . ' in ' . $th->getFile();
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - login()');
             return $this->response->setJSON($response);
         }
