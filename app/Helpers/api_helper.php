@@ -43,11 +43,20 @@ function generate_tokens($identity, $user_group, $uid = null,$loginType=null)
     } else {
         $builder->select('u.*,ug.group_id')
             ->join('users_groups ug', 'ug.user_id = u.id')
-            ->where('ug.group_id', $user_group)
-            ->where('phone', $identity)
-            ->where('loginType',$loginType);
+            ->where('ug.group_id', $user_group);
+        // If identity looks like an email, look up by email; otherwise by phone
+        if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+            $builder->where('email', $identity);
+        } else {
+            $builder->where('phone', $identity)
+                ->where('loginType', $loginType);
+        }
     }
-    $user_id = $builder->get()->getResultArray()[0]['id'];
+    $result = $builder->get()->getResultArray();
+    if (empty($result)) {
+        throw new \Exception("User not found for token generation");
+    }
+    $user_id = $result[0]['id'];
 
     $payload = [
         'iat' => time(), /* issued at time */
