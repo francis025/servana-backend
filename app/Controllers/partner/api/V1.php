@@ -121,14 +121,25 @@ class V1 extends BaseController
             $validation =  \Config\Services::validation();
             $request = \Config\Services::request();
             $identity_column = $config->identity;
-            if ($identity_column == 'phone') {
+
+            // Support email login: if email parameter is provided, use email-based login
+            $useEmailLogin = !empty($request->getPost('email'));
+
+            if ($useEmailLogin) {
+                $identity = $request->getPost('email');
+                $validation->setRule('email', 'Email', 'required|valid_email');
+                $lookupColumn = 'email';
+            } elseif ($identity_column == 'phone') {
                 $identity = $request->getPost('mobile');
                 $validation->setRule('mobile', 'Mobile', 'numeric|required');
+                $lookupColumn = 'phone';
             } elseif ($identity_column == 'email') {
                 $identity = $request->getPost('email');
                 $validation->setRule('email', 'Email', 'required|valid_email');
+                $lookupColumn = 'email';
             } else {
                 $validation->setRule('identity', 'Identity', 'required');
+                $lookupColumn = $identity_column;
             }
             $validation->setRule('password', 'Password', 'required');
             $password = $request->getPost('password');
@@ -147,13 +158,24 @@ class V1 extends BaseController
                 ];
                 return $this->response->setJSON($response);
             }
-            $login = $ionAuth->login($identity, $password, false, $request->getPost('country_code'));
+
+            // For email login, we need to find the user's phone first for ionAuth
+            $loginIdentity = $identity;
+            if ($useEmailLogin) {
+                $db = \Config\Database::connect();
+                $emailLookup = $db->table('users')->select('phone')->where('email', $identity)->get()->getRowArray();
+                if (!empty($emailLookup) && !empty($emailLookup['phone'])) {
+                    $loginIdentity = $emailLookup['phone'];
+                }
+            }
+
+            $login = $ionAuth->login($loginIdentity, $password, false, $request->getPost('country_code'));
             $db      = \Config\Database::connect();
             $builder = $db->table('users u');
             $builder->select('u.*,ug.group_id')
                 ->join('users_groups ug', 'ug.user_id = u.id')
                 ->where('ug.group_id', 3)
-                ->where(['phone' => $identity]);
+                ->where([$lookupColumn => $identity]);
             $userCheck = $builder->get()->getResultArray();
             if (empty($userCheck)) {
                 $response = [
@@ -163,10 +185,16 @@ class V1 extends BaseController
                 return $this->response->setJSON($response);
             }
             if (!empty($userCheck)) {
-                if ((($userCheck[0]['country_code'] == null) || ($userCheck[0]['country_code'] == $request->getPost('country_code'))) && (($userCheck[0]['phone'] == $identity))) {
+                $identityMatch = $useEmailLogin
+                    ? ($userCheck[0]['email'] == $identity)
+                    : ($userCheck[0]['phone'] == $identity);
+                $countryCodeMatch = $useEmailLogin
+                    ? true
+                    : (($userCheck[0]['country_code'] == null) || ($userCheck[0]['country_code'] == $request->getPost('country_code')));
+                if ($countryCodeMatch && $identityMatch) {
                     if ($login) {
-                        if (($userCheck[0]['country_code'] == null)) {
-                            update_details(['country_code' => $request->getPost('country_code')], ['phone' => $identity], 'users');
+                        if (($userCheck[0]['country_code'] == null) && !$useEmailLogin) {
+                            update_details(['country_code' => $request->getPost('country_code')], ['id' => $userCheck[0]['id']], 'users');
                         }
                         if (($request->getPost('fcm_id')) && !empty($request->getPost('fcm_id'))) {
                             // Get language_code from request (optional)
@@ -176,7 +204,7 @@ class V1 extends BaseController
                             // update_details(['fcm_id' => $request->getPost('fcm_id')], ['phone' => $identity, 'id' => $userCheck[0]['id']], 'users');
                         }
                         if (($request->getPost('platform')) && !empty($request->getPost('platform'))) {
-                            update_details(['platform' => $request->getPost('platform')], ['phone' => $identity], 'users');
+                            update_details(['platform' => $request->getPost('platform')], ['id' => $userCheck[0]['id']], 'users');
                         }
                         $data = array();
                         array_push($this->user_data, "api_key");
@@ -196,7 +224,8 @@ class V1 extends BaseController
                         ];
                         return $this->response->setJSON($response);
                     } else {
-                        if (!exists([$identity_column => $identity], 'users')) {
+                        $existsColumn = $useEmailLogin ? 'email' : $identity_column;
+                        if (!exists([$existsColumn => $identity], 'users')) {
                             $response = [
                                 'error' => true,
                                 'message' => labels(USER_DOES_NOT_EXISTS, 'User does not exists !'),
