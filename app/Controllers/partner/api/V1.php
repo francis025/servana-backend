@@ -7784,13 +7784,13 @@ class V1 extends BaseController
 
             $monthly_sales = $db->table('orders')
                 ->select('YEAR(date_of_service) as year, MONTHNAME(date_of_service) as month, SUM(final_total) as total_amount')
-                ->where('date_of_service >=', "DATE_SUB(CURDATE(), INTERVAL $last_monthly_sales MONTH)", false) // No binding needed
+                ->where('date_of_service >=', "DATE_SUB(CURDATE(), INTERVAL $last_monthly_sales MONTH)", false)
                 ->where('date_of_service <=', date("Y-m-d"))
                 ->where([
                     'partner_id' => $partner_id,
                     "status" => "completed"
                 ])
-                ->groupBy("YEAR(date_of_service), MONTH(date_of_service)")
+                ->groupBy("YEAR(date_of_service), MONTHNAME(date_of_service)")
                 ->orderBy("YEAR(date_of_service), MONTH(date_of_service)")
                 ->get()->getResultArray();
 
@@ -7803,15 +7803,17 @@ class V1 extends BaseController
 
             $yearly_sales = $db->table('orders')
                 ->select('YEAR(date_of_service) as year, SUM(final_total) as total_amount')
-                ->where('date_of_service BETWEEN CURDATE() - INTERVAL 1 YEAR AND CURDATE()')
-                ->where(['partner_id' => $partner_id, 'date_of_service < ' => date("Y-m-d H:i:s"), "status" => "completed"])
+                ->where('date_of_service >=', 'CURDATE() - INTERVAL 1 YEAR', false)
+                ->where('date_of_service <=', 'CURDATE()', false)
+                ->where(['partner_id' => $partner_id, "status" => "completed"])
                 ->groupBy("YEAR(date_of_service)")
                 ->get()->getResultArray();
 
             $weekly_sales = $db->table('orders')
                 ->select('WEEK(date_of_service) as week, SUM(final_total) as total_amount')
-                ->where('date_of_service BETWEEN CURDATE() - INTERVAL 1 WEEK AND CURDATE()')
-                ->where(['partner_id' => $partner_id, 'date_of_service < ' => date("Y-m-d H:i:s"), "status" => "completed"])
+                ->where('date_of_service >=', 'CURDATE() - INTERVAL 1 WEEK', false)
+                ->where('date_of_service <=', 'CURDATE()', false)
+                ->where(['partner_id' => $partner_id, "status" => "completed"])
                 ->groupBy("WEEK(date_of_service)")
                 ->get()->getResultArray();
 
@@ -7835,7 +7837,7 @@ class V1 extends BaseController
             );
             return $this->response->setJSON([
                 'error'   => true,
-                'message' => 'v7-Home error: ' . $th->getMessage() . ' at line ' . $th->getLine() . ' in ' . basename($th->getFile()),
+                'message' => 'v8-Home error: ' . $th->getMessage() . ' at line ' . $th->getLine() . ' in ' . basename($th->getFile()),
             ]);
         }
     }
