@@ -7697,12 +7697,9 @@ class V1 extends BaseController
             $data['earning_report']['admin_commission'] = $adminCommission[0]['payable_commision'];
 
 
-            // Use direct query for unsettled commission to avoid ONLY_FULL_GROUP_BY
+            // Use raw SQL for unsettled commission to avoid ONLY_FULL_GROUP_BY
             $dbConn = \Config\Database::connect();
-            $unsettledResult = $dbConn->table('orders')
-                ->selectSum('final_total', 'total')
-                ->where(['partner_id' => $partner_id, 'is_commission_settled' => '0', 'status' => 'completed'])
-                ->get()->getRowArray();
+            $unsettledResult = $dbConn->query("SELECT COALESCE(SUM(final_total), 0) as total FROM orders WHERE partner_id = ? AND is_commission_settled = '0' AND status = 'completed'", [$partner_id])->getRowArray();
             $unsettledTotal = $unsettledResult['total'] ?? 0;
             $adminCommPct = get_admin_commision($partner_id);
             $adminCommRate = intval($adminCommPct) / 100;
@@ -7714,11 +7711,8 @@ class V1 extends BaseController
             $data['earning_report']['remaining_income'] = $remainingIncome[0]['balance'];
 
 
-            // Use direct query for future earnings to avoid ONLY_FULL_GROUP_BY
-            $futureResult = $dbConn->table('orders')
-                ->selectSum('final_total', 'total')
-                ->where(['partner_id' => $partner_id, 'is_commission_settled' => '0', 'status' => 'awaiting'])
-                ->get()->getRowArray();
+            // Use raw SQL for future earnings to avoid ONLY_FULL_GROUP_BY
+            $futureResult = $dbConn->query("SELECT COALESCE(SUM(final_total), 0) as total FROM orders WHERE partner_id = ? AND is_commission_settled = '0' AND status = 'awaiting'", [$partner_id])->getRowArray();
             $futureTotal = $futureResult['total'] ?? 0;
             if (!empty($futureTotal)) {
                 $admin_commission_percentage = get_admin_commision($partner_id);

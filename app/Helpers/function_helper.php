@@ -2874,7 +2874,17 @@ function fetch_details($table, $where = [], $fields = [], $limit = "", $offset =
     if ($limit != null && $limit != "") {
         $builder = $builder->limit($limit, $offset);
     }
-    $builder = $builder->orderBy($sort, $order);
+    // Skip orderBy when aggregate functions are used to avoid ONLY_FULL_GROUP_BY errors
+    $hasAggregate = false;
+    if (!empty($fields)) {
+        $fieldsStr = is_array($fields) ? implode(' ', $fields) : $fields;
+        if (preg_match('/\b(sum|count|avg|min|max)\s*\(/i', $fieldsStr)) {
+            $hasAggregate = true;
+        }
+    }
+    if (!$hasAggregate) {
+        $builder = $builder->orderBy($sort, $order);
+    }
     $res = $builder->get()->getResultArray();
 
     $db->close();
