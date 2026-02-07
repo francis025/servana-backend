@@ -4986,13 +4986,24 @@ class V1 extends BaseController
     {
         try {
             $validation =  \Config\Services::validation();
-            $validation->setRules(
-                [
-                    'new_password' => 'required',
-                    'mobile_number' => 'required',
-                    'country_code' => 'required',
-                ]
-            );
+            $useEmailReset = !empty($this->request->getPost('email'));
+
+            if ($useEmailReset) {
+                $validation->setRules(
+                    [
+                        'new_password' => 'required',
+                        'email' => 'required|valid_email',
+                    ]
+                );
+            } else {
+                $validation->setRules(
+                    [
+                        'new_password' => 'required',
+                        'mobile_number' => 'required',
+                        'country_code' => 'required',
+                    ]
+                );
+            }
             if (!$validation->withRequest($this->request)->run()) {
                 $errors = $validation->getErrors();
                 $response = [
@@ -5002,58 +5013,46 @@ class V1 extends BaseController
                 ];
                 return $this->response->setJSON($response);
             }
-            $identity = $this->request->getPost('mobile_number');
-            $user_data = fetch_details('users', ['phone' => $identity]);
+
             $db      = \Config\Database::connect();
             $builder = $db->table('users u');
             $builder->select('u.*,ug.group_id')
                 ->join('users_groups ug', 'ug.user_id = u.id')
-                ->where('ug.group_id', 3)
-                ->where(['phone' => $identity]);
+                ->where('ug.group_id', 3);
+
+            if ($useEmailReset) {
+                $identity = $this->request->getPost('email');
+                $builder->where(['email' => $identity]);
+            } else {
+                $identity = $this->request->getPost('mobile_number');
+                $builder->where(['phone' => $identity]);
+            }
+
             $user_data = $builder->get()->getResultArray();
             if (empty($user_data)) {
                 return $this->response->setJSON([
-                    'error' => false,
+                    'error' => true,
                     'message' => labels(USER_DOES_NOT_EXIST, "User does not exist"),
-                    "data" => $_POST,
+                    "data" => [],
                 ]);
             }
-            if ((($user_data[0]['country_code'] == null) || ($user_data[0]['country_code'] == $this->request->getPost('country_code'))) && (($user_data[0]['phone'] == $identity))) {
-                $change = $this->ionAuth->resetPassword($identity, $this->request->getPost('new_password'), $user_data[0]['id']);
-                if ($change) {
-                    $this->ionAuth->logout();
-                    return $this->response->setJSON([
-                        'error' => false,
-                        'message' => labels(FORGOT_PASSWORD_SUCCESSFULLY, "Forgot Password  successfully"),
-                        "data" => $_POST,
-                    ]);
-                } else {
-                    return $this->response->setJSON([
-                        'error' => true,
-                        'message' => $this->ionAuth->errors($this->validationListTemplate),
-                        "data" => $_POST,
-                    ]);
-                }
-                $change = $this->ionAuth->resetPassword($identity, $this->request->getPost('new'));
-                if ($change) {
-                    $this->ionAuth->logout();
-                    return $this->response->setJSON([
-                        'error' => false,
-                        'message' => labels(FORGOT_PASSWORD_SUCCESSFULLY, "Forgot Password  successfully"),
-                        "data" => $_POST,
-                    ]);
-                } else {
-                    return $this->response->setJSON([
-                        'error' => true,
-                        'message' => $this->ionAuth->errors($this->validationListTemplate),
-                        "data" => $_POST,
-                    ]);
-                }
+
+            // For email reset, use the user's phone as identity for ionAuth
+            $resetIdentity = $useEmailReset ? $user_data[0]['phone'] : $identity;
+
+            $change = $this->ionAuth->resetPassword($resetIdentity, $this->request->getPost('new_password'), $user_data[0]['id']);
+            if ($change) {
+                $this->ionAuth->logout();
+                return $this->response->setJSON([
+                    'error' => false,
+                    'message' => labels(FORGOT_PASSWORD_SUCCESSFULLY, "Forgot Password successfully"),
+                    "data" => [],
+                ]);
             } else {
                 return $this->response->setJSON([
                     'error' => true,
-                    'message' => labels(FORGOT_PASSWORD_FAILED, "Forgot Password Failed"),
-                    "data" => $_POST,
+                    'message' => $this->ionAuth->errors($this->validationListTemplate),
+                    "data" => [],
                 ]);
             }
         } catch (\Exception $th) {
