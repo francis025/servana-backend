@@ -7569,10 +7569,6 @@ class V1 extends BaseController
     public function get_home_data()
     {
         try {
-            // Disable ONLY_FULL_GROUP_BY to allow aggregate queries with non-grouped columns
-            $db = \Config\Database::connect();
-            $db->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
-
             $partner_id = $this->user_details['id'];
 
             //-------------------------------SUBSCRIPTION INFORMATION------------------------------//
@@ -7701,7 +7697,16 @@ class V1 extends BaseController
             $data['earning_report']['admin_commission'] = $adminCommission[0]['payable_commision'];
 
 
-            $total_balance = strval(unsettled_commision($partner_id));
+            // Use direct query for unsettled commission to avoid ONLY_FULL_GROUP_BY
+            $dbConn = \Config\Database::connect();
+            $unsettledResult = $dbConn->table('orders')
+                ->selectSum('final_total', 'total')
+                ->where(['partner_id' => $partner_id, 'is_commission_settled' => '0', 'status' => 'completed'])
+                ->get()->getRowArray();
+            $unsettledTotal = $unsettledResult['total'] ?? 0;
+            $adminCommPct = get_admin_commision($partner_id);
+            $adminCommRate = intval($adminCommPct) / 100;
+            $total_balance = strval($unsettledTotal - (intval($unsettledTotal) * $adminCommRate));
 
             $data['earning_report']['my_income'] = $total_balance;
 
@@ -7709,17 +7714,20 @@ class V1 extends BaseController
             $data['earning_report']['remaining_income'] = $remainingIncome[0]['balance'];
 
 
-            $amount = fetch_details('orders', ['partner_id' => $partner_id, 'is_commission_settled' => '0', 'status' => 'awaiting'], ['sum(final_total) as total']);
-            if (isset($amount) && !empty($amount)) {
+            // Use direct query for future earnings to avoid ONLY_FULL_GROUP_BY
+            $futureResult = $dbConn->table('orders')
+                ->selectSum('final_total', 'total')
+                ->where(['partner_id' => $partner_id, 'is_commission_settled' => '0', 'status' => 'awaiting'])
+                ->get()->getRowArray();
+            $futureTotal = $futureResult['total'] ?? 0;
+            if (!empty($futureTotal)) {
                 $admin_commission_percentage = get_admin_commision($partner_id);
                 $admin_commission_amount = intval($admin_commission_percentage) / 100;
-                $total = $amount[0]['total'];
-                $commision = intval($total) * $admin_commission_amount;
-                $unsettled_amount = $total - $commision;
+                $commision = intval($futureTotal) * $admin_commission_amount;
+                $unsettled_amount = $futureTotal - $commision;
             } else {
                 $unsettled_amount = 0.0;
             }
-            $unsettled_amount = $unsettled_amount;
 
 
             $data['earning_report']['future_earning_from_bookings'] = (float)$unsettled_amount;
