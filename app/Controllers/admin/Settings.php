@@ -2166,13 +2166,6 @@ class Settings extends Admin
                 return redirect('admin/login');
             }
             setPageInfo($this->data, labels('Web Settings', 'Web Settings') . ' | ' . labels('admin_panel', 'Admin Panel'), 'web_settings');
-
-            // Initialize multi-language fields with defaults so the view never encounters undefined variables
-            $this->data['web_title'] = $this->data['web_title'] ?? [];
-            $this->data['message_for_customer_web'] = $this->data['message_for_customer_web'] ?? [];
-            $this->data['cookie_consent_title'] = $this->data['cookie_consent_title'] ?? [];
-            $this->data['cookie_consent_description'] = $this->data['cookie_consent_description'] ?? [];
-
             $this->builder->select('value');
             $this->builder->where('variable', 'web_settings');
             $query = $this->builder->get()->getResultArray();

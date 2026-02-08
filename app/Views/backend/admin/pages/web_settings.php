@@ -1,5 +1,24 @@
 <!-- Main Content -->
 <?php
+// Ensure all expected variables have defaults to prevent undefined variable errors
+$web_logo = $web_logo ?? '';
+$web_favicon = $web_favicon ?? '';
+$web_half_logo = $web_half_logo ?? '';
+$footer_logo = $footer_logo ?? '';
+$web_title = $web_title ?? [];
+$message_for_customer_web = $message_for_customer_web ?? [];
+$cookie_consent_title = $cookie_consent_title ?? [];
+$cookie_consent_description = $cookie_consent_description ?? [];
+$customer_web_maintenance_mode = $customer_web_maintenance_mode ?? 0;
+$customer_web_maintenance_schedule_date = $customer_web_maintenance_schedule_date ?? '';
+$app_section_status = $app_section_status ?? 0;
+$cookie_consent_status = $cookie_consent_status ?? 0;
+$register_provider_from_web_setting_status = $register_provider_from_web_setting_status ?? 0;
+$playstore_url = $playstore_url ?? '';
+$applestore_url = $applestore_url ?? '';
+$social_media = $social_media ?? [];
+$languages = $languages ?? [];
+
 $db      = \Config\Database::connect();
 $builder = $db->table('users u');
 $builder->select('u.*,ug.group_id')
