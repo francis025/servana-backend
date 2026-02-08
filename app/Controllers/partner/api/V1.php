@@ -1376,7 +1376,6 @@ class V1 extends BaseController
                 }
             }
         } catch (\Exception $th) {
-            throw $th;
             log_the_responce(" Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_orders()');
             return $this->response->setJSON([
                 'error' => true,
@@ -2921,7 +2920,6 @@ class V1 extends BaseController
                 }
             }
         } catch (\Exception $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - send_withdrawal_request()');
@@ -3802,7 +3800,6 @@ class V1 extends BaseController
                 return $this->response->setJSON($response);
             }
         } catch (\Exception $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - manage_service()');
@@ -4744,7 +4741,6 @@ class V1 extends BaseController
             ];
             return $this->response->setJSON($response);
         } catch (\Exception $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_service_ratings()');
@@ -6335,7 +6331,6 @@ class V1 extends BaseController
 
             return response_helper(labels(SENT_MESSAGE_SUCCESSFULLY, 'Sent message successfully '), false, $data_with_extras, 200);
         } catch (\Throwable $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - send_chat_message()');
@@ -6584,7 +6579,6 @@ class V1 extends BaseController
                 }
             }
         } catch (\Throwable $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_chat_history()');
@@ -6607,7 +6601,7 @@ class V1 extends BaseController
                 ->join('orders o', "o.id = c.booking_id")
                 ->join('users us', "us.id = o.user_id")
                 ->where('o.partner_id', $this->user_details['id'])
-                ->groupBy('c.booking_id')
+                ->groupBy('c.booking_id, us.id, us.username, us.image, o.status')
                 ->orderBy('last_chat_date', 'DESC');
             $totalCustomersQuery1 = $builder->countAllResults(false);
             $customers_with_chats = $builder->get()->getResultArray();
@@ -6639,7 +6633,7 @@ class V1 extends BaseController
                 ->join('enquiries e', "e.id = c.e_id")
                 ->join('users us', "us.id = e.customer_id")
                 ->where('e.provider_id', $this->user_details['id'])
-                ->groupBy('e.customer_id')
+                ->groupBy('e.customer_id, us.id, us.username, us.image, c.booking_id')
                 ->orderBy('last_chat_date', 'DESC');
             $totalCustomersQuery2 = $builder1->countAllResults(false);
             $customer_pre_booking_queries = $builder1->get()->getResultArray();
@@ -6675,7 +6669,6 @@ class V1 extends BaseController
 
             return response_helper(labels(RETRIVED_SUCCESSFULLY, 'Retrived successfully '), false, $merged_array, 200, ['total' => $totalRecords]);
         } catch (\Throwable $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_chat_customers_list()');
@@ -6780,7 +6773,6 @@ class V1 extends BaseController
             ];
             return $this->response->setJSON($response);
         } catch (\Throwable $th) {
-            throw $th;
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_user_info()');
@@ -8069,7 +8061,6 @@ class V1 extends BaseController
 
             ]);
         } catch (\Throwable $th) {
-            throw $th;
             log_the_responce($this->request->header('Authorization') . ' Params: ' . json_encode($_POST) . " Issue: " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - logout()');
             return $this->response->setJSON([
                 'error' => true,
@@ -8344,7 +8335,7 @@ class V1 extends BaseController
                 'message' => labels(CUSTOMER_BLOCKED_SUCCESSFULLY, 'Customer Blocked Successfully'),
             ]);
         } catch (\Throwable $th) {
-            throw $th;
+            log_the_responce($this->request->header('Authorization') . ' Issue: ' . $th, date("Y-m-d H:i:s") . '--> V1.php - block_customer()');
             return $this->response->setJSON([
                 'error' => true,
                 'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
@@ -8376,6 +8367,7 @@ class V1 extends BaseController
                 'data' => $users,
             ]);
         } catch (\Throwable $th) {
+            log_the_responce($this->request->header('Authorization') . ' Issue: ' . $th, date("Y-m-d H:i:s") . '--> V1.php - unblock_user()');
             return $this->response->setJSON([
                 'error' => true,
                 'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
@@ -8414,7 +8406,7 @@ class V1 extends BaseController
                 'message' => labels(CHAT_DELETED_SUCCESSFULLY, 'Chat deleted successfully'),
             ]);
         } catch (\Throwable $th) {
-            throw $th;
+            log_the_responce($this->request->header('Authorization') . ' Issue: ' . $th, date("Y-m-d H:i:s") . '--> V1.php - delete_chat()');
             return $this->response->setJSON([
                 'error' => true,
                 'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
@@ -8535,7 +8527,7 @@ class V1 extends BaseController
                 'data' => $blocked_users
             ]);
         } catch (\Throwable $th) {
-            throw $th;
+            log_the_responce($this->request->header('Authorization') . ' Issue: ' . $th, date("Y-m-d H:i:s") . '--> V1.php - get_blocked_users()');
             return $this->response->setJSON([
                 'error' => true,
                 'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
@@ -8608,7 +8600,7 @@ class V1 extends BaseController
             ];
             return $this->response->setJSON($response);
         } catch (\Throwable $th) {
-            throw $th;
+            log_the_responce($this->request->header('Authorization') . ' Issue: ' . $th, date("Y-m-d H:i:s") . '--> V1.php - report_user()');
             $response = [
                 'error' => true,
                 'message' => labels(SOMETHING_WENT_WRONG, 'Something went wrong'),
