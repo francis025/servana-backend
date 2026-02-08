@@ -7790,7 +7790,7 @@ class V1 extends BaseController
                     'partner_id' => $partner_id,
                     "status" => "completed"
                 ])
-                ->groupBy("YEAR(date_of_service), MONTHNAME(date_of_service)")
+                ->groupBy("YEAR(date_of_service), MONTH(date_of_service), MONTHNAME(date_of_service)")
                 ->orderBy("YEAR(date_of_service), MONTH(date_of_service)")
                 ->get()->getResultArray();
 
