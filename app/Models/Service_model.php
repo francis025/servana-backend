@@ -281,7 +281,7 @@ class Service_model extends Model
         $queryConditionsMain($mainQuery);
 
         // Apply ordering and limits
-        $records = $mainQuery->groupBy('s.id');
+        $records = $mainQuery->groupBy('s.id, c.name, tcd.name, p.username, c.parent_id, pd.need_approval_for_the_service, pd.slug, tpd.username, tsd.title, tsd.description, tsd.long_description, tsd.tags, tsd.faqs');
 
         // Map UI sort keys to actual DB columns when they live outside services table.
         // This keeps the orderBy clause valid even when joined-table fields (like category parent_id) are used.
