@@ -2770,6 +2770,7 @@ window.Category_events = {
             $("#edit_category_slug").val(categoryData.slug || '');
             $("#edit_dark_theme_color").val(categoryData.dark_color || '#2A2C3E');
             $("#edit_light_theme_color").val(categoryData.light_color || '#FFFFFF');
+            $("#edit_admin_commission").val(categoryData.admin_commission || 0);
             
             // Restore all parent category options
             var parentSelect = $("#edit_category_ids");

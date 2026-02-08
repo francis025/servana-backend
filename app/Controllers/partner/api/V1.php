@@ -2886,6 +2886,8 @@ class V1 extends BaseController
                 $current_balance =  fetch_details('users', ['id' => $user_id], ['balance', 'username']);
                 if ($current_balance[0]['balance'] >= $amount) {
                     $model->save($payment_request);
+                    // Log wallet withdrawal transaction before deducting
+                    log_wallet_withdrawal($user_id, $amount, 'Withdrawal request');
                     update_balance($this->request->getVar('amount'), $user_id, 'deduct');
                     $balance = fetch_details("users", ["id" => $this->user_details['id']], ['balance']);
                     $response = [
@@ -5174,6 +5176,207 @@ class V1 extends BaseController
             $response['error'] = true;
             $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
             log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_settlement_history()');
+            return $this->response->setJSON($response);
+        }
+    }
+
+    /**
+     * Get provider wallet details: balance, minimum required balance, and recent transactions.
+     */
+    public function get_wallet_details()
+    {
+        try {
+            $user_id = $this->user_details['id'];
+            if (!exists(['id' => $user_id], 'users')) {
+                return $this->response->setJSON([
+                    'error' => true,
+                    'message' => labels(INVALID_USER_ID, 'Invalid User Id.'),
+                    'data' => [],
+                ]);
+            }
+
+            $balance_data = fetch_details('users', ['id' => $user_id], ['balance']);
+            $balance = floatval($balance_data[0]['balance'] ?? 0);
+            $min_balance = floatval(get_settings('minimum_wallet_balance', false, true) ?: 0);
+
+            // Get recent transactions (last 10)
+            $db = \Config\Database::connect();
+            $recent_transactions = $db->table('wallet_transactions')
+                ->where('provider_id', $user_id)
+                ->orderBy('created_at', 'DESC')
+                ->limit(10)
+                ->get()->getResultArray();
+
+            // Get total commission deducted (all time)
+            $total_commission = $db->table('wallet_transactions')
+                ->selectSum('amount')
+                ->where('provider_id', $user_id)
+                ->where('type', 'commission_deduction')
+                ->where('payment_status', 'success')
+                ->get()->getRowArray();
+
+            // Get total top-ups (all time)
+            $total_topups = $db->table('wallet_transactions')
+                ->selectSum('amount')
+                ->where('provider_id', $user_id)
+                ->where('type', 'topup')
+                ->where('payment_status', 'success')
+                ->get()->getRowArray();
+
+            // Get total withdrawals (all time)
+            $total_withdrawals = $db->table('wallet_transactions')
+                ->selectSum('amount')
+                ->where('provider_id', $user_id)
+                ->whereIn('type', ['withdrawal'])
+                ->get()->getRowArray();
+
+            return $this->response->setJSON([
+                'error' => false,
+                'message' => labels('wallet_details_fetched', 'Wallet details fetched successfully'),
+                'data' => [
+                    'balance' => strval($balance),
+                    'minimum_wallet_balance' => strval($min_balance),
+                    'total_commission_deducted' => strval(floatval($total_commission['amount'] ?? 0)),
+                    'total_topups' => strval(floatval($total_topups['amount'] ?? 0)),
+                    'total_withdrawals' => strval(floatval($total_withdrawals['amount'] ?? 0)),
+                    'recent_transactions' => $recent_transactions,
+                ],
+            ]);
+        } catch (\Exception $th) {
+            $response['error'] = true;
+            $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
+            log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_wallet_details()');
+            return $this->response->setJSON($response);
+        }
+    }
+
+    /**
+     * Get paginated wallet transaction history for the provider.
+     */
+    public function get_wallet_transactions()
+    {
+        try {
+            $user_id = $this->user_details['id'];
+            $limit = $this->request->getPost('limit') ?: 10;
+            $offset = $this->request->getPost('offset') ?: 0;
+            $type_filter = $this->request->getPost('type') ?: ''; // topup, commission_deduction, commission_refund, withdrawal, admin_credit, admin_debit
+
+            if (!exists(['id' => $user_id], 'users')) {
+                return $this->response->setJSON([
+                    'error' => true,
+                    'message' => labels(INVALID_USER_ID, 'Invalid User Id.'),
+                    'data' => [],
+                ]);
+            }
+
+            $db = \Config\Database::connect();
+            $builder = $db->table('wallet_transactions');
+            $builder->where('provider_id', $user_id);
+
+            if (!empty($type_filter)) {
+                $builder->where('type', $type_filter);
+            }
+
+            // Get total count
+            $total = $builder->countAllResults(false);
+
+            // Get paginated results
+            $transactions = $builder->orderBy('created_at', 'DESC')
+                ->limit($limit, $offset)
+                ->get()->getResultArray();
+
+            if (!empty($transactions)) {
+                return $this->response->setJSON([
+                    'error' => false,
+                    'message' => labels('wallet_transactions_fetched', 'Wallet transactions fetched successfully'),
+                    'total' => strval($total),
+                    'data' => $transactions,
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'error' => true,
+                    'message' => labels(NO_DATA_FOUND, 'No data found'),
+                    'total' => '0',
+                    'data' => [],
+                ]);
+            }
+        } catch (\Exception $th) {
+            $response['error'] = true;
+            $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
+            log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - get_wallet_transactions()');
+            return $this->response->setJSON($response);
+        }
+    }
+
+    /**
+     * Top up provider wallet via payment gateway.
+     * Accepts amount, payment_method, and txn_id after payment is completed on client side.
+     */
+    public function topup_wallet()
+    {
+        try {
+            $this->validation = \Config\Services::validation();
+            $this->validation->setRules([
+                'amount' => 'required|numeric|greater_than[0]',
+                'payment_method' => 'required',
+                'txn_id' => 'required',
+            ]);
+
+            if (!$this->validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'error' => true,
+                    'message' => $this->validation->getErrors(),
+                    'data' => [],
+                ]);
+            }
+
+            $user_id = $this->user_details['id'];
+            $amount = floatval($this->request->getPost('amount'));
+            $payment_method = $this->request->getPost('payment_method');
+            $txn_id = $this->request->getPost('txn_id');
+
+            if (!exists(['id' => $user_id], 'users')) {
+                return $this->response->setJSON([
+                    'error' => true,
+                    'message' => labels(INVALID_USER_ID, 'Invalid User Id.'),
+                    'data' => [],
+                ]);
+            }
+
+            // Log the top-up (this also adds to balance)
+            log_wallet_topup($user_id, $amount, $payment_method, $txn_id);
+
+            // Also add a transaction record for consistency with existing system
+            $t = time();
+            $transaction_data = [
+                'transaction_type' => 'wallet_topup',
+                'user_id' => $user_id,
+                'partner_id' => $user_id,
+                'order_id' => "TOPUP-$t",
+                'type' => $payment_method,
+                'txn_id' => $txn_id,
+                'amount' => $amount,
+                'status' => 'success',
+                'currency_code' => null,
+                'message' => 'Wallet top-up',
+            ];
+            add_transaction($transaction_data);
+
+            // Get updated balance
+            $new_balance = fetch_details('users', ['id' => $user_id], ['balance']);
+
+            return $this->response->setJSON([
+                'error' => false,
+                'message' => labels('wallet_topup_success', 'Wallet topped up successfully'),
+                'data' => [
+                    'balance' => $new_balance[0]['balance'],
+                    'amount_added' => strval($amount),
+                ],
+            ]);
+        } catch (\Exception $th) {
+            $response['error'] = true;
+            $response['message'] = labels(SOMETHING_WENT_WRONG, 'Something went wrong');
+            log_the_responce($this->request->header('Authorization') . '   Params passed :: ' . json_encode($_POST) . " Issue => " . $th, date("Y-m-d H:i:s") . '--> app/Controllers/partner/api/V1.php - topup_wallet()');
             return $this->response->setJSON($response);
         }
     }

@@ -119,6 +119,15 @@ $permissions = get_permission($user1[0]['id']);
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="admin_commission"><?= labels('admin_commission', 'Admin Commission') ?> (%)</label>
+                                        <i data-content="<?= labels('admin_commission_info', 'Commission percentage deducted from provider wallet when they accept a booking in this category.') ?>" class="fa fa-question-circle" data-original-title="" title="" data-toggle="popover"></i>
+                                        <input id="admin_commission" class="form-control" type="number" name="admin_commission" placeholder="<?= labels('enter_commission_percentage', 'Enter commission percentage') ?>" min="0" max="100" step="0.01" value="0">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
@@ -403,6 +412,15 @@ $permissions = get_permission($user1[0]['id']);
                         <div class="col-md-6">
                             <div id="edit_categoryImage" style="width: 200px; height: 150px; border: 1px solid ;border-color: #e4e6fc;border-radius: 0.35rem;margin-bottom:25px ">
                                 <img src="" alt="old_image" style="display: block;margin-left: auto;margin-top: 25px;margin-right: auto;width: 80%;" width="50%" height="100px" id="category_image" id="update_service_image">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_admin_commission"><?= labels('admin_commission', 'Admin Commission') ?> (%)</label>
+                                <i data-content="<?= labels('admin_commission_info', 'Commission percentage deducted from provider wallet when they accept a booking in this category.') ?>" class="fa fa-question-circle" data-original-title="" title="" data-toggle="popover"></i>
+                                <input id="edit_admin_commission" class="form-control" type="number" name="admin_commission" placeholder="<?= labels('enter_commission_percentage', 'Enter commission percentage') ?>" min="0" max="100" step="0.01" value="0">
                             </div>
                         </div>
                     </div>

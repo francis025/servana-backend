@@ -238,6 +238,17 @@ class Settings extends Admin
                 $file_transfer_process = $this->request->getPost('file_transfer_process') ?? 0;
                 $updatedData['file_transfer_process'] = $file_transfer_process;
 
+                // Save minimum_wallet_balance as a separate setting (not part of general_settings JSON)
+                $min_wallet_balance = $this->request->getPost('minimum_wallet_balance');
+                if ($min_wallet_balance !== null) {
+                    $existing = $this->builder->where('variable', 'minimum_wallet_balance')->countAllResults(false);
+                    if ($existing > 0) {
+                        update_details(['value' => $min_wallet_balance], ['variable' => 'minimum_wallet_balance'], 'settings');
+                    } else {
+                        insert_details(['variable' => 'minimum_wallet_balance', 'value' => $min_wallet_balance], 'settings');
+                    }
+                }
+
                 $json_string = json_encode($updatedData);
 
                 $file_manager = $_POST['file_manager'];
@@ -330,6 +341,10 @@ class Settings extends Admin
             };
 
             $this->data['timezones'] = get_timezone_array();
+
+            // Load minimum_wallet_balance from separate settings row
+            $min_wallet = get_settings('minimum_wallet_balance', false, true);
+            $this->data['minimum_wallet_balance'] = $min_wallet !== false ? $min_wallet : '0';
 
             // fetch languages for multilingual support
             $languages = fetch_details('languages', [], ['id', 'language', 'is_default', 'code'], "", '0', 'id', 'ACE');

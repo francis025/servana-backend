@@ -35,6 +35,237 @@ function update_balance($amount, $partner_id, $action)
 }
 
 /**
+ * Calculate the commission amount for an order based on its service category's admin_commission %.
+ * Uses the highest category commission among the order's services.
+ *
+ * @param int $order_id
+ * @return array ['commission_percentage' => float, 'commission_amount' => float, 'order_total' => float]
+ */
+function calculate_order_commission($order_id)
+{
+    $db = \Config\Database::connect();
+
+    // Get order total
+    $order = $db->table('orders')->select('final_total, partner_id')->where('id', $order_id)->get()->getRowArray();
+    if (empty($order)) {
+        return ['commission_percentage' => 0, 'commission_amount' => 0, 'order_total' => 0];
+    }
+
+    // Get the category commission % via order_services → services → categories
+    // Use the MAX commission % among all services in the order
+    $result = $db->query("
+        SELECT MAX(c.admin_commission) as max_commission
+        FROM order_services os
+        JOIN services s ON os.service_id = s.id
+        JOIN categories c ON s.category_id = c.id
+        WHERE os.order_id = ? AND os.status != 'cancelled'
+    ", [$order_id])->getRowArray();
+
+    $commission_percentage = floatval($result['max_commission'] ?? 0);
+    $order_total = floatval($order['final_total']);
+    $commission_amount = round($order_total * ($commission_percentage / 100), 2);
+
+    return [
+        'commission_percentage' => $commission_percentage,
+        'commission_amount' => $commission_amount,
+        'order_total' => $order_total,
+        'partner_id' => $order['partner_id']
+    ];
+}
+
+/**
+ * Check if provider has sufficient wallet balance for commission deduction.
+ *
+ * @param int $partner_id
+ * @param float $commission_amount
+ * @return array ['sufficient' => bool, 'balance' => float, 'minimum_required' => float]
+ */
+function check_wallet_balance_for_commission($partner_id, $commission_amount)
+{
+    $balance_data = fetch_details('users', ['id' => $partner_id], ['balance']);
+    $balance = floatval($balance_data[0]['balance'] ?? 0);
+
+    $min_balance = floatval(get_settings('minimum_wallet_balance', false, true) ?: 0);
+    $minimum_required = $commission_amount + $min_balance;
+
+    return [
+        'sufficient' => $balance >= $minimum_required,
+        'balance' => $balance,
+        'minimum_required' => $minimum_required,
+        'commission_amount' => $commission_amount,
+        'min_wallet_balance' => $min_balance
+    ];
+}
+
+/**
+ * Deduct commission from provider wallet and log the transaction.
+ *
+ * @param int $partner_id
+ * @param int $order_id
+ * @param float $commission_amount
+ * @param float $commission_percentage
+ * @return bool
+ */
+function deduct_wallet_commission($partner_id, $order_id, $commission_amount, $commission_percentage)
+{
+    if ($commission_amount <= 0) {
+        return true; // No commission to deduct
+    }
+
+    $db = \Config\Database::connect();
+
+    // Get current balance
+    $balance_data = $db->table('users')->select('balance')->where('id', $partner_id)->get()->getRowArray();
+    $balance_before = floatval($balance_data['balance'] ?? 0);
+    $balance_after = round($balance_before - $commission_amount, 2);
+
+    // Deduct from wallet
+    update_balance($commission_amount, $partner_id, 'deduct');
+
+    // Log wallet transaction
+    $db->table('wallet_transactions')->insert([
+        'provider_id' => $partner_id,
+        'order_id' => $order_id,
+        'type' => 'commission_deduction',
+        'amount' => $commission_amount,
+        'balance_before' => $balance_before,
+        'balance_after' => $balance_after,
+        'commission_percentage' => $commission_percentage,
+        'description' => "Commission deducted for booking #$order_id",
+        'payment_status' => 'success',
+    ]);
+
+    // Update order with commission info
+    update_details([
+        'commission_deducted' => $commission_amount,
+        'commission_percentage_applied' => $commission_percentage
+    ], ['id' => $order_id], 'orders');
+
+    return true;
+}
+
+/**
+ * Refund commission to provider wallet when a booking is cancelled after acceptance.
+ *
+ * @param int $order_id
+ * @return bool
+ */
+function refund_wallet_commission($order_id)
+{
+    $db = \Config\Database::connect();
+
+    // Check if commission was deducted for this order
+    $order = $db->table('orders')
+        ->select('partner_id, commission_deducted, commission_percentage_applied')
+        ->where('id', $order_id)
+        ->get()->getRowArray();
+
+    if (empty($order) || floatval($order['commission_deducted']) <= 0) {
+        return true; // No commission to refund
+    }
+
+    $partner_id = $order['partner_id'];
+    $refund_amount = floatval($order['commission_deducted']);
+
+    // Get current balance
+    $balance_data = $db->table('users')->select('balance')->where('id', $partner_id)->get()->getRowArray();
+    $balance_before = floatval($balance_data['balance'] ?? 0);
+    $balance_after = round($balance_before + $refund_amount, 2);
+
+    // Add back to wallet
+    update_balance($refund_amount, $partner_id, 'add');
+
+    // Log wallet transaction
+    $db->table('wallet_transactions')->insert([
+        'provider_id' => $partner_id,
+        'order_id' => $order_id,
+        'type' => 'commission_refund',
+        'amount' => $refund_amount,
+        'balance_before' => $balance_before,
+        'balance_after' => $balance_after,
+        'commission_percentage' => $order['commission_percentage_applied'],
+        'description' => "Commission refunded for cancelled booking #$order_id",
+        'payment_status' => 'success',
+    ]);
+
+    // Reset commission on order
+    update_details([
+        'commission_deducted' => 0,
+        'commission_percentage_applied' => 0
+    ], ['id' => $order_id], 'orders');
+
+    return true;
+}
+
+/**
+ * Log a wallet top-up transaction.
+ *
+ * @param int $provider_id
+ * @param float $amount
+ * @param string $payment_method
+ * @param string $txn_id
+ * @param string $payment_status
+ * @return bool
+ */
+function log_wallet_topup($provider_id, $amount, $payment_method = '', $txn_id = '', $payment_status = 'success')
+{
+    $db = \Config\Database::connect();
+
+    $balance_data = $db->table('users')->select('balance')->where('id', $provider_id)->get()->getRowArray();
+    $balance_before = floatval($balance_data['balance'] ?? 0);
+    $balance_after = round($balance_before + $amount, 2);
+
+    // Add to wallet
+    update_balance($amount, $provider_id, 'add');
+
+    // Log transaction
+    $db->table('wallet_transactions')->insert([
+        'provider_id' => $provider_id,
+        'order_id' => null,
+        'type' => 'topup',
+        'amount' => $amount,
+        'balance_before' => $balance_before,
+        'balance_after' => $balance_after,
+        'description' => "Wallet top-up via $payment_method",
+        'payment_method' => $payment_method,
+        'payment_status' => $payment_status,
+        'txn_id' => $txn_id,
+    ]);
+
+    return true;
+}
+
+/**
+ * Log a wallet withdrawal transaction.
+ *
+ * @param int $provider_id
+ * @param float $amount
+ * @param string $description
+ * @return bool
+ */
+function log_wallet_withdrawal($provider_id, $amount, $description = 'Withdrawal request')
+{
+    $db = \Config\Database::connect();
+
+    $balance_data = $db->table('users')->select('balance')->where('id', $provider_id)->get()->getRowArray();
+    $balance_before = floatval($balance_data['balance'] ?? 0);
+    $balance_after = round($balance_before - $amount, 2);
+
+    // Log transaction (balance deduction happens in send_withdrawal_request)
+    $db->table('wallet_transactions')->insert([
+        'provider_id' => $provider_id,
+        'type' => 'withdrawal',
+        'amount' => $amount,
+        'balance_before' => $balance_before,
+        'balance_after' => $balance_after,
+        'description' => $description,
+        'payment_status' => 'pending',
+    ]);
+
+    return true;
+}
+
+/**
  * Normalize folder names to match the format used in sample_panel.json
  * Converts folder names to lowercase and replaces spaces with underscores
  * 
@@ -440,6 +671,34 @@ function validate_status($order_id, $status, $date = '', $selected_time = "", $o
             return $response;
         }
         if (in_array($status, ["awaiting", "confirmed"])) {
+            // WALLET COMMISSION CHECK: When provider confirms a booking,
+            // check wallet balance and deduct commission immediately
+            if ($status == "confirmed") {
+                $commission_info = calculate_order_commission($order_id);
+                $commission_amount = $commission_info['commission_amount'];
+                $partner_id = $commission_info['partner_id'];
+
+                if ($commission_amount > 0) {
+                    $wallet_check = check_wallet_balance_for_commission($partner_id, $commission_amount);
+                    if (!$wallet_check['sufficient']) {
+                        $response['error'] = true;
+                        $response['message'] = labels('insufficient_wallet_balance', 'Insufficient wallet balance. You need at least') 
+                            . ' ' . number_format($wallet_check['minimum_required'], 2) 
+                            . ' ' . labels('to_accept_this_booking', 'to accept this booking. Please top up your wallet.');
+                        $response['data'] = [
+                            'wallet_balance' => $wallet_check['balance'],
+                            'commission_amount' => $commission_amount,
+                            'commission_percentage' => $commission_info['commission_percentage'],
+                            'minimum_required' => $wallet_check['minimum_required']
+                        ];
+                        return $response;
+                    }
+
+                    // Deduct commission from wallet
+                    deduct_wallet_commission($partner_id, $order_id, $commission_amount, $commission_info['commission_percentage']);
+                }
+            }
+
             update_details(['status' => $status], ['id' => $order_id], 'orders');
             update_details(["status" => $status], ["order_id" => $order_id, "status!=" => "cancelled"], "order_services");
 
@@ -1144,6 +1403,9 @@ function validate_status($order_id, $status, $date = '', $selected_time = "", $o
                 $active_status = !empty($order_data) && !empty($order_data[0]['status']) ? $order_data[0]['status'] : '';
                 $customer_id = !empty($order_data) && !empty($order_data[0]['user_id']) ? $order_data[0]['user_id'] : null;
 
+                // Refund wallet commission if it was deducted on acceptance
+                refund_wallet_commission($order_id);
+
                 // Update order status to cancelled
                 $order_details = fetch_details('order_services', ['order_id' => $order_id]);
                 update_details(['status' => $status], ['id' => $order_id], 'orders');
@@ -1211,6 +1473,9 @@ function validate_status($order_id, $status, $date = '', $selected_time = "", $o
                                     $response['data'] = [];
                                     return $response;
                                 } else {
+                                    // Refund wallet commission if it was deducted on acceptance
+                                    refund_wallet_commission($order_id);
+
                                     update_details(['status' => $status], ['id' => $order_id], 'orders');
                                     $refund = process_refund($order_id, $status, $customer_id);
 

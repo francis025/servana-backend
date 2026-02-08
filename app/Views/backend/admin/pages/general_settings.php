@@ -118,6 +118,13 @@ $permissions = get_permission($user1[0]['id']);
                             </div>
                             <div class="col-md-6 ">
                                 <div class="form-group">
+                                    <div class="control-label"><?= labels('minimum_wallet_balance', "Minimum Wallet Balance") ?> <span class="breadcrumb-item p-3 pt-2 text-primary">
+                                            <i data-content="<?= labels('data_content_minimum_wallet_balance', 'The minimum balance a provider must maintain in their wallet to accept bookings. Providers need this amount plus the commission for the booking in their wallet.') ?>" class="fa fa-question-circle" data-original-title="" title=""></i></span></div>
+                                    <input type="number" min="0" step="0.01" class="form-control" name="minimum_wallet_balance" id="minimum_wallet_balance" value="<?= isset($minimum_wallet_balance) ? $minimum_wallet_balance : '0' ?>" />
+                                </div>
+                            </div>
+                            <div class="col-md-6 ">
+                                <div class="form-group">
                                     <div class="control-label"><?= labels('image_compression_preference', "Image Compression Preference") ?> <span class="breadcrumb-item p-3 pt-2 text-primary">
                                             <i data-content="<?= labels('data_content_image_compression_preference', 'If enabled, This high-quality image has been compressed to a lower quality, as per the quality provided in Image Compression Quality.') ?>" class="fa fa-question-circle" data-original-title="" title=""></i></span></div>
                                     <select name="image_compression_preference" class="form-control" id="image_compression_preference">

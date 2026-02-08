@@ -135,7 +135,7 @@ class Categories extends Admin
             $data['name'] = $defaultName;
             $data['image'] = $url;
             $data['slug'] = generate_unique_slug($normalizedSlug, 'categories');
-            $data['admin_commission'] = "0";
+            $data['admin_commission'] = isset($_POST['admin_commission']) && is_numeric($_POST['admin_commission']) ? floatval($_POST['admin_commission']) : 0;
             $data['parent_id'] = $_POST['parent_id'] ?? 0;
             $data['dark_color'] = $_POST['dark_theme_color'] != "#000000" ? $_POST['dark_theme_color'] : "#2A2C3E";
             $data['light_color'] = $_POST['light_theme_color'] != "#000000" ? $_POST['light_theme_color'] : "#FFFFFF";
@@ -531,7 +531,7 @@ class Categories extends Admin
             $slug = generate_unique_slug($normalizedSlug, 'categories', $id);
             $data = [
                 'parent_id' => $type == "1" ? $this->request->getPost(('edit_parent_id')) : "0",
-                'admin_commission' => "0",
+                'admin_commission' => isset($_POST['admin_commission']) && is_numeric($_POST['admin_commission']) ? floatval($_POST['admin_commission']) : 0,
                 'dark_color' => $_POST['edit_dark_theme_color'],
                 'light_color' => $_POST['edit_light_theme_color'],
                 'status' => 1,

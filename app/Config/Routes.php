@@ -86,6 +86,11 @@ $routes->group('partner/api/v1', ['filter' => 'language'], function ($routes) {
 
     $routes->post('get_cash_collection', 'partner\api\V1::get_cash_collection');
     $routes->post('get_settlement_history', 'partner\api\V1::get_settlement_history');
+
+    // Wallet APIs
+    $routes->post('get_wallet_details', 'partner\api\V1::get_wallet_details');
+    $routes->post('get_wallet_transactions', 'partner\api\V1::get_wallet_transactions');
+    $routes->post('topup_wallet', 'partner\api\V1::topup_wallet');
     $routes->post('delete_provider_account', 'partner\api\V1::delete_provider_account');
     $routes->post('get_subscription', 'partner\api\V1::get_subscription');
     $routes->post('buy_subscription', 'partner\api\V1::buy_subscription');
