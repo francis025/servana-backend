@@ -202,6 +202,11 @@ $routes->group('', ['filter' => 'protected'], function ($routes) {
     $routes->add('admin/partners/cash_collection_history_list', 'admin\Partners::cash_collection_history_list');
     $routes->add('admin/partners/bulk_cash_collection', 'admin\Partners::bulk_cash_collection');
     $routes->add('admin/partners/duplicate/(:any)', 'admin\Partners::duplicate');
+    //WALLET ROUTES
+    $routes->add('admin/partners/wallet_overview', 'admin\Partners::wallet_overview');
+    $routes->add('admin/partners/wallet_overview_list', 'admin\Partners::wallet_overview_list');
+    $routes->add('admin/partners/wallet_transactions/(:any)', 'admin\Partners::wallet_transactions/$1');
+    $routes->add('admin/partners/wallet_transactions_list', 'admin\Partners::wallet_transactions_list');
     //USER ROUTES  
     $routes->add('admin/users', 'admin\Users::index');
     $routes->add('admin/users/deactivate', 'admin\Users::deactivate');
