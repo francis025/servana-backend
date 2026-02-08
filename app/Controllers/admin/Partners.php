@@ -5807,4 +5807,203 @@ class Partners extends Admin
 
         return $restructured;
     }
+
+    // ==================== Provider Wallet Overview ====================
+    public function wallet_overview()
+    {
+        try {
+            if (!$this->isLoggedIn || !$this->userIsAdmin) {
+                return redirect('admin/login');
+            }
+            setPageInfo($this->data, labels('wallet_overview', 'Provider Wallet Overview') . ' | ' . labels(ADMIN_PANEL, 'Admin Panel'), 'wallet_overview');
+            return view('backend/admin/template', $this->data);
+        } catch (\Throwable $th) {
+            log_the_responce($th, date("Y-m-d H:i:s") . ' --> app/Controllers/admin/Partners.php - wallet_overview()');
+            return ErrorResponse(labels(SOMETHING_WENT_WRONG, 'Something Went Wrong'), true, [], [], 200, csrf_token(), csrf_hash());
+        }
+    }
+
+    public function wallet_overview_list()
+    {
+        try {
+            if (!$this->isLoggedIn || !$this->userIsAdmin) {
+                return ErrorResponse('Unauthorized', true, [], [], 200, csrf_token(), csrf_hash());
+            }
+
+            $offset = $this->request->getVar('offset') ?? 0;
+            $limit = $this->request->getVar('limit') ?? 10;
+            $sort = $this->request->getVar('sort') ?? 'id';
+            $order = $this->request->getVar('order') ?? 'DESC';
+            $search = $this->request->getVar('search') ?? '';
+
+            $builder = $this->db->table('users u');
+            $builder->select('u.id, u.username, u.email, u.phone, u.balance, u.image');
+            $builder->join('users_groups ug', 'ug.user_id = u.id');
+            $builder->where('ug.group_id', 3); // partner group
+
+            if (!empty($search)) {
+                $builder->groupStart();
+                $builder->like('u.username', $search);
+                $builder->orLike('u.email', $search);
+                $builder->orLike('u.phone', $search);
+                $builder->groupEnd();
+            }
+
+            $total = $builder->countAllResults(false);
+
+            $allowedSorts = ['id', 'username', 'balance'];
+            $sort = in_array($sort, $allowedSorts) ? 'u.' . $sort : 'u.id';
+            $builder->orderBy($sort, $order);
+            $builder->limit($limit, $offset);
+            $providers = $builder->get()->getResultArray();
+
+            $rows = [];
+            foreach ($providers as $provider) {
+                $pid = $provider['id'];
+
+                // Get total commission deducted
+                $commResult = $this->db->table('wallet_transactions')
+                    ->selectSum('amount')
+                    ->where('provider_id', $pid)
+                    ->where('type', 'commission_deduction')
+                    ->get()->getRowArray();
+                $totalCommission = $commResult['amount'] ?? 0;
+
+                // Get total top-ups
+                $topupResult = $this->db->table('wallet_transactions')
+                    ->selectSum('amount')
+                    ->where('provider_id', $pid)
+                    ->where('type', 'topup')
+                    ->get()->getRowArray();
+                $totalTopups = $topupResult['amount'] ?? 0;
+
+                // Get total withdrawals
+                $withdrawResult = $this->db->table('wallet_transactions')
+                    ->selectSum('amount')
+                    ->where('provider_id', $pid)
+                    ->where('type', 'withdrawal')
+                    ->get()->getRowArray();
+                $totalWithdrawals = $withdrawResult['amount'] ?? 0;
+
+                // Get transaction count
+                $txnCount = $this->db->table('wallet_transactions')
+                    ->where('provider_id', $pid)
+                    ->countAllResults();
+
+                $rows[] = [
+                    'id' => $pid,
+                    'provider_name' => $provider['username'] ?? '',
+                    'email' => $provider['email'] ?? '',
+                    'phone' => $provider['phone'] ?? '',
+                    'balance' => number_format((float)($provider['balance'] ?? 0), 2),
+                    'total_commission' => number_format((float)$totalCommission, 2),
+                    'total_topups' => number_format((float)$totalTopups, 2),
+                    'total_withdrawals' => number_format((float)$totalWithdrawals, 2),
+                    'transactions' => $txnCount,
+                    'action' => '<a href="' . base_url('admin/partners/wallet_transactions/' . $pid) . '" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i> ' . labels('view', 'View') . '</a>',
+                ];
+            }
+
+            return $this->response->setJSON([
+                'total' => $total,
+                'totalNotFiltered' => $total,
+                'rows' => $rows,
+            ]);
+        } catch (\Throwable $th) {
+            log_the_responce($th, date("Y-m-d H:i:s") . ' --> app/Controllers/admin/Partners.php - wallet_overview_list()');
+            return $this->response->setJSON(['total' => 0, 'totalNotFiltered' => 0, 'rows' => []]);
+        }
+    }
+
+    public function wallet_transactions($provider_id = null)
+    {
+        try {
+            if (!$this->isLoggedIn || !$this->userIsAdmin) {
+                return redirect('admin/login');
+            }
+            if (empty($provider_id)) {
+                return redirect('admin/partners/wallet_overview');
+            }
+            $provider = fetch_details('users', ['id' => $provider_id], ['id', 'username', 'balance']);
+            $this->data['provider'] = !empty($provider) ? $provider[0] : [];
+            $this->data['provider_id'] = $provider_id;
+            setPageInfo($this->data, labels('wallet_transactions', 'Wallet Transactions') . ' | ' . labels(ADMIN_PANEL, 'Admin Panel'), 'wallet_transactions');
+            return view('backend/admin/template', $this->data);
+        } catch (\Throwable $th) {
+            log_the_responce($th, date("Y-m-d H:i:s") . ' --> app/Controllers/admin/Partners.php - wallet_transactions()');
+            return ErrorResponse(labels(SOMETHING_WENT_WRONG, 'Something Went Wrong'), true, [], [], 200, csrf_token(), csrf_hash());
+        }
+    }
+
+    public function wallet_transactions_list()
+    {
+        try {
+            if (!$this->isLoggedIn || !$this->userIsAdmin) {
+                return $this->response->setJSON(['total' => 0, 'rows' => []]);
+            }
+
+            $provider_id = $this->request->getVar('provider_id');
+            $offset = $this->request->getVar('offset') ?? 0;
+            $limit = $this->request->getVar('limit') ?? 10;
+            $sort = $this->request->getVar('sort') ?? 'id';
+            $order = $this->request->getVar('order') ?? 'DESC';
+            $search = $this->request->getVar('search') ?? '';
+            $type_filter = $this->request->getVar('type_filter') ?? '';
+
+            $builder = $this->db->table('wallet_transactions');
+            $builder->where('provider_id', $provider_id);
+
+            if (!empty($type_filter)) {
+                $builder->where('type', $type_filter);
+            }
+            if (!empty($search)) {
+                $builder->groupStart();
+                $builder->like('description', $search);
+                $builder->orLike('type', $search);
+                $builder->orLike('amount', $search);
+                $builder->groupEnd();
+            }
+
+            $total = $builder->countAllResults(false);
+
+            $allowedSorts = ['id', 'type', 'amount', 'created_at'];
+            $sort = in_array($sort, $allowedSorts) ? $sort : 'id';
+            $builder->orderBy($sort, $order);
+            $builder->limit($limit, $offset);
+            $transactions = $builder->get()->getResultArray();
+
+            $typeLabels = [
+                'topup' => '<span class="badge badge-success">Top Up</span>',
+                'commission_deduction' => '<span class="badge badge-danger">Commission</span>',
+                'commission_refund' => '<span class="badge badge-info">Refund</span>',
+                'withdrawal' => '<span class="badge badge-warning">Withdrawal</span>',
+                'admin_credit' => '<span class="badge badge-success">Admin Credit</span>',
+                'admin_debit' => '<span class="badge badge-danger">Admin Debit</span>',
+            ];
+
+            $rows = [];
+            foreach ($transactions as $txn) {
+                $rows[] = [
+                    'id' => $txn['id'],
+                    'type' => $typeLabels[$txn['type']] ?? $txn['type'],
+                    'amount' => number_format((float)$txn['amount'], 2),
+                    'balance_before' => number_format((float)$txn['balance_before'], 2),
+                    'balance_after' => number_format((float)$txn['balance_after'], 2),
+                    'commission_percentage' => $txn['commission_percentage'] ? $txn['commission_percentage'] . '%' : '-',
+                    'description' => $txn['description'] ?? '-',
+                    'order_id' => $txn['order_id'] ?? '-',
+                    'created_at' => $txn['created_at'],
+                ];
+            }
+
+            return $this->response->setJSON([
+                'total' => $total,
+                'totalNotFiltered' => $total,
+                'rows' => $rows,
+            ]);
+        } catch (\Throwable $th) {
+            log_the_responce($th, date("Y-m-d H:i:s") . ' --> app/Controllers/admin/Partners.php - wallet_transactions_list()');
+            return $this->response->setJSON(['total' => 0, 'totalNotFiltered' => 0, 'rows' => []]);
+        }
+    }
 }

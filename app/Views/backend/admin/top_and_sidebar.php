@@ -246,6 +246,12 @@ $version = $db->table('updates')->select('*')->orderBy('id', 'DESC')->get(1)->ge
                     </ul>
                 </li>
             <?php } ?>
+            <li class="nav-item <?= ($current_url == base_url('admin/partners/wallet_overview')) ? 'active' : '' ?>">
+                <a class="nav-link" href="<?= base_url('admin/partners/wallet_overview') ?>">
+                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                    <span class="span"><?= labels('wallet_overview', 'Provider Wallets') ?></span>
+                </a>
+            </li>
             <?php if ($permissions['read']['orders'] == 1) { ?>
                 <label for="provider management" class="heading_lable"><?= labels('booking_management', 'BOOKING MANAGEMENT') ?></label>
                 <li class="nav-item"><a class="nav-link" href="<?= base_url('/admin/orders') ?>"><span class="material-symbols-outlined">
