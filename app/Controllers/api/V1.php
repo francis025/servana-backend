@@ -7123,6 +7123,7 @@ class V1 extends BaseController
             $filter_type = $this->request->getPost('filter_type') ?? null; // 'booking' or 'pre_booking'
             $order_status_filter = $this->request->getPost('order_status') ?? null; // New filter
             $db = \Config\Database::connect();
+            $disk = fetch_current_file_manager();
             // ------------------ FETCH BOOKING-RELATED CHATS ------------------
             $builder = $db->table('users u');
             $builder->select('u.id, u.username as customer_name, MAX(c.created_at) AS last_chat_date, 
@@ -7133,7 +7134,7 @@ class V1 extends BaseController
                 ->join('partner_details pd', "pd.partner_id = o.partner_id")
                 ->join('users ps', "ps.id = pd.partner_id")
                 ->where('o.user_id', $this->user_details['id'])
-                ->groupBy('c.booking_id')
+                ->groupBy('c.booking_id, u.id, u.username, o.id, o.status, pd.partner_id, pd.company_name, ps.image')
                 ->orderBy('last_chat_date', 'DESC');
             $bookingChats = $builder->get()->getResultArray();
 
@@ -7158,7 +7159,7 @@ class V1 extends BaseController
                 ->join('partner_details pd', "pd.partner_id = e.provider_id")
                 ->join('users ps', "ps.id = pd.partner_id")
                 ->where('e.customer_id', $this->user_details['id'])
-                ->groupBy('e.provider_id')
+                ->groupBy('e.provider_id, u.id, u.username, pd.partner_id, pd.company_name, ps.image')
                 ->orderBy('last_chat_date', 'DESC');
             $preBookingChats = $subquery->get()->getResultArray();
 
@@ -7187,7 +7188,7 @@ class V1 extends BaseController
                         'company_name' => $chat['partner_name'] ?? '',
                         'about' => '',
                         'long_description' => '',
-                        'username' => $chat['username'] ?? ''
+                        'username' => ''
                     ];
                     $translatedData = $this->getTranslatedPartnerData($chat['partner_id'], $partnerData);
                     $chat['partner_name'] = $translatedData['company_name'];
@@ -7195,16 +7196,21 @@ class V1 extends BaseController
                     $chat['translated_username'] = $translatedData['translated_username'] ?? $translatedData['username'];
                 }
 
+                // Normalize partner profile image URL based on storage disk
                 $imagePath = $chat['image'] ?? '';
-                $chat['image'] = (file_exists(FCPATH . 'public/backend/assets/profiles/' . $imagePath))
-                    ? base_url('public/backend/assets/profiles/' . $imagePath)
-                    : ((file_exists(FCPATH . $imagePath))
-                        ? base_url($imagePath)
-                        : ((!file_exists(FCPATH . "public/uploads/users/partners/" . $imagePath))
-                            ? base_url("public/backend/assets/profiles/default.png")
-                            : base_url("public/uploads/users/partners/" . $imagePath)
-                        )
-                    );
+                if ($disk === 'aws_s3') {
+                    $chat['image'] = fetch_cloud_front_url('profile', $imagePath);
+                } else {
+                    $chat['image'] = (file_exists(FCPATH . 'public/backend/assets/profiles/' . $imagePath))
+                        ? base_url('public/backend/assets/profiles/' . $imagePath)
+                        : ((file_exists(FCPATH . $imagePath))
+                            ? base_url($imagePath)
+                            : ((!file_exists(FCPATH . "public/uploads/users/partners/" . $imagePath))
+                                ? base_url("public/backend/assets/profiles/default.png")
+                                : base_url("public/uploads/users/partners/" . $imagePath)
+                            )
+                        );
+                }
             }
             unset($chat);
 
