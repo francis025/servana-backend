@@ -7159,7 +7159,7 @@ class V1 extends BaseController
                 ->join('partner_details pd', "pd.partner_id = e.provider_id")
                 ->join('users ps', "ps.id = pd.partner_id")
                 ->where('e.customer_id', $this->user_details['id'])
-                ->groupBy('e.provider_id, u.id, u.username, pd.partner_id, pd.company_name, ps.image')
+                ->groupBy('e.provider_id, u.id, u.username, c.booking_id, pd.partner_id, pd.company_name, ps.image')
                 ->orderBy('last_chat_date', 'DESC');
             $preBookingChats = $subquery->get()->getResultArray();
 
