@@ -11542,9 +11542,6 @@ class V1 extends BaseController
         $category_data = $categories->list(true, $search, null, null, $sort, $order, $where, $languageCode);
         foreach ($category_data['data'] as $index => $category) {
             $category_data['data'][$index]['total_providers'] = $this->getTotalProviders($category['id'], $db);
-            if ($category_data['data'][$index]['total_providers'] == 0) {
-                unset($category_data['data'][$index]);
-            }
         }
         $category_data['data'] = array_values($category_data['data']);
 
